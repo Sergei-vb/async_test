@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 import os
-from subprocess import PIPE
 import logging
+from subprocess import PIPE
 
 import tornado.ioloop
 import tornado.web
 import tornado.httpclient
 import tornado.gen
-from tornado.process import Subprocess
 import tornado.options
+import tornado.websocket
+from tornado.process import Subprocess
 from tornado.options import parse_command_line
 
 SETTINGS = {
@@ -31,9 +32,21 @@ class RequestAsync(tornado.web.RequestHandler):
 
 def make_app():
     return tornado.web.Application([
-        # (r"/static/", tornado.web.StaticFileHandler),
-        (r"/fortune/", RequestAsync)
+        (r"/static/", tornado.web.StaticFileHandler),
+        (r"/fortune/", RequestAsync),
+        (r"/websocket/", HelloWebSocket)
     ], **SETTINGS)
+
+
+class HelloWebSocket(tornado.websocket.WebSocketHandler):
+    def open(self):
+        logging.info("WebSocket opened")
+
+    def on_message(self, message):
+        self.write_message("You said: " + message)
+
+    def on_close(self):
+        logging.info("WebSocket closed")
 
 
 if __name__ == "__main__":
