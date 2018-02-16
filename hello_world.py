@@ -10,11 +10,13 @@ import tornado.gen
 import tornado.options
 import tornado.websocket
 from tornado.process import Subprocess
-from tornado.options import parse_command_line
+import docker
+
+client = docker.from_env()
 
 SETTINGS = {
+    "template_path": os.path.join(os.path.dirname(__file__), "template"),
     "static_path": os.path.join(os.path.dirname(__file__), "static"),
-    "static_handler_args": {"default_filename": "index.htm"}
 }
 
 
@@ -30,27 +32,40 @@ class RequestAsync(tornado.web.RequestHandler):
         self.write(out)
 
 
+class Manage(tornado.web.RequestHandler):
+    def get(self):
+        self.render("manage.html")
+
+
 def make_app():
     return tornado.web.Application([
-        (r"/static/", tornado.web.StaticFileHandler),
         (r"/fortune/", RequestAsync),
-        (r"/websocket/", HelloWebSocket)
+        (r"/manage/", Manage),
+        (r"/load_images/", ImagesWebSocket),
+        (r"/load_running_containers/", RunningContainersWebSocket)
     ], **SETTINGS)
 
 
-class HelloWebSocket(tornado.websocket.WebSocketHandler):
+class ImagesWebSocket(tornado.websocket.WebSocketHandler):
     def open(self):
-        logging.info("WebSocket opened")
+        self.write_message(dict(
+            images=[i.attrs["RepoTags"][0] for i in client.images.list()]))
 
-    def on_message(self, message):
-        self.write_message("You said: " + message)
+    def on_close(self):
+        logging.info("WebSocket closed")
+
+
+class RunningContainersWebSocket(tornado.websocket.WebSocketHandler):
+    def open(self):
+        self.write_message(dict(
+            containers=[i.attrs["Name"] for i in client.containers.list()]))
 
     def on_close(self):
         logging.info("WebSocket closed")
 
 
 if __name__ == "__main__":
-    parse_command_line()
+    tornado.options.parse_command_line()
     app = make_app()
     if os.getenv("PORT"):
         logging.info("Use your PORT: {}".format(os.getenv("PORT")))

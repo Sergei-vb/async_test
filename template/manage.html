@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage</title>
+</head>
+<body>
+<script src="/static/websockets.js"></script>
+    <div>
+        <div style="background-color:green; width:50%; float:left">
+            Images:<hr>
+            <input type="submit" value="Load" onclick="loadImages()">
+            <ul id="print_images"></ul>
+        </div>
+        <div style="background-color:yellow">
+            Running Containers:<hr>
+            <input type="submit" value="Load" onclick="loadRunningContainers()">
+            <ul id="print_containers"></ul>
+        </div>
+    </div>
+</body>
+</html>
