@@ -5,14 +5,14 @@ from subprocess import PIPE
 
 import tornado.ioloop
 import tornado.web
-import tornado.httpclient
 import tornado.gen
 import tornado.options
 import tornado.websocket
 from tornado.process import Subprocess
 import docker
 
-client = docker.from_env()
+
+CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 SETTINGS = {
     "template_path": os.path.join(os.path.dirname(__file__), "template"),
@@ -23,9 +23,6 @@ SETTINGS = {
 class RequestAsync(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def get(self):
-        # http_client = tornado.httpclient.AsyncHTTPClient()
-        # response = yield http_client.fetch("https://ya.ru")
-        # self.write(html.escape(response.body.decode('utf-8')))
         process = Subprocess(["fortune"], stdout=PIPE, stderr=PIPE, shell=True)
         yield process.wait_for_exit()
         out, err = process.stdout.read(), process.stderr.read()
@@ -41,24 +38,24 @@ def make_app():
     return tornado.web.Application([
         (r"/fortune/", RequestAsync),
         (r"/manage/", Manage),
-        (r"/load_images/", ImagesWebSocket),
-        (r"/load_running_containers/", RunningContainersWebSocket)
+        (r"/load_from_docker/", DockerWebSocket),
     ], **SETTINGS)
 
 
-class ImagesWebSocket(tornado.websocket.WebSocketHandler):
+class DockerWebSocket(tornado.websocket.WebSocketHandler):
     def open(self):
-        self.write_message(dict(
-            images=[i.attrs["RepoTags"][0] for i in client.images.list()]))
+        logging.info("WebSocket opened")
 
-    def on_close(self):
-        logging.info("WebSocket closed")
+    def on_message(self, message):
+        if message == "images":
+            self.write_message(dict(
+                images=[i["RepoTags"][0] for i in CLIENT.images()]))
+        elif message == "containers":
+            self.write_message(dict(
+                containers=[i["Names"][0] for i in CLIENT.containers()]))
 
-
-class RunningContainersWebSocket(tornado.websocket.WebSocketHandler):
-    def open(self):
-        self.write_message(dict(
-            containers=[i.attrs["Name"] for i in client.containers.list()]))
+        else:
+            self.write_message(dict(message="Client error"))
 
     def on_close(self):
         logging.info("WebSocket closed")

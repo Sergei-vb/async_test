@@ -6,15 +6,16 @@
 </head>
 <body>
 <script src="/static/websockets.js"></script>
+<script src="/static/jquery-3.3.1.slim.js"></script>
     <div>
         <div style="background-color:green; width:50%; float:left">
             Images:<hr>
-            <input type="submit" value="Load" onclick="loadImages()">
+            <input type="submit" value="Load" onclick="load('images')">
             <ul id="print_images"></ul>
         </div>
-        <div style="background-color:yellow">
+        <div style="background-color:yellow; width:50%; float:right">
             Running Containers:<hr>
-            <input type="submit" value="Load" onclick="loadRunningContainers()">
+            <input type="submit" value="Load" onclick="load('containers')">
             <ul id="print_containers"></ul>
         </div>
     </div>

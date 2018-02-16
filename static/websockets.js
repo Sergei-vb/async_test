@@ -1,32 +1,28 @@
-function loadImages() {
-        var ws = new WebSocket("ws://" + location.host + "/load_images/");
+function load(key_from_html) {
+        var ws = new WebSocket("ws://" + location.host + "/load_from_docker/");
         ws.onopen = function() {
-           console.log("connected")
+           console.log("opened");
+           ws.send(key_from_html)
         };
         ws.onmessage = function (evt) {
            console.log(evt.data);
-           var getjson_images = evt.data;
-           var parsejson_images = JSON.parse(getjson_images);
-           for (key in parsejson_images.images) {
-             document.getElementById("print_images").innerHTML += "<li>" + parsejson_images.images[key] + "</li>";
-           };
-        };
-        ws.onclose = function() {
-           console.log("closed");
-        };
-    }
-
-function loadRunningContainers() {
-        var ws = new WebSocket("ws://" + location.host + "/load_running_containers/");
-        ws.onopen = function() {
-           console.log("connected");
-        };
-        ws.onmessage = function (evt) {
-           console.log(evt.data);
-           var getjson_containers = evt.data;
-           var parsejson_containers = JSON.parse(getjson_containers);
-           for (key in parsejson_containers.containers) {
-             document.getElementById("print_containers").innerHTML += "<li>" + parsejson_containers.containers[key] + "</li>";
+           var getjson = evt.data;
+           var parsejson = JSON.parse(getjson);
+           if (key_from_html == "images") {$("#print_images").empty();};
+           if (key_from_html == "containers") {$("#print_containers").empty();};
+           switch (key_from_html) {
+              case "images":
+                 for (key in parsejson.images) {
+                 $("#print_images").append("<li>" + parsejson.images[key] + "</li>");
+                 };
+                 break;
+              case "containers":
+                 for (key in parsejson.containers) {
+                 $("#print_containers").append("<li>" + parsejson.containers[key] + "</li>");
+                 };
+                 break;
+              default:
+                 alert(parsejson.message)
            };
         };
         ws.onclose = function() {

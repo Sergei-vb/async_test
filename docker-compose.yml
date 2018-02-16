@@ -8,3 +8,4 @@ services:
     volumes:
      - .:/app
      - /var/log/hello_world:/var/log/
+     - /var/run/docker.sock:/var/run/docker.sock
