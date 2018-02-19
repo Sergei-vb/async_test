@@ -2,10 +2,20 @@ function load(key_from_html) {
         var ws = new WebSocket("ws://" + location.host + "/load_from_docker/");
         ws.onopen = function() {
            console.log("opened");
-           ws.send(key_from_html)
+           if (key_from_html == "url-address") {
+           var value_url = $("#url").val()
+           var dict = {};
+           dict[key_from_html] = value_url;
+           dict = JSON.stringify(dict);
+           ws.send(dict);
+           } else {
+           var dict = {};
+           dict[key_from_html] = key_from_html;
+           dict = JSON.stringify(dict);
+           ws.send(dict);
+           }
         };
         ws.onmessage = function (evt) {
-           console.log(evt.data);
            var getjson = evt.data;
            var parsejson = JSON.parse(getjson);
            if (key_from_html == "images") {$("#print_images").empty();};
@@ -19,6 +29,11 @@ function load(key_from_html) {
               case "containers":
                  for (key in parsejson.containers) {
                  $("#print_containers").append("<li>" + parsejson.containers[key] + "</li>");
+                 };
+                 break;
+              case "url-address":
+                 for (key in parsejson) {
+                 $("#output").append("<li>" + parsejson[key] + "</li>");
                  };
                  break;
               default:

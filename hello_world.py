@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import logging
+import json
 from subprocess import PIPE
 
 import tornado.ioloop
@@ -47,13 +48,17 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def on_message(self, message):
-        if message == "images":
+        d = json.loads(message)
+        if "url-address" in d:
+            url = "{}.git".format(d["url-address"])
+            for line in CLIENT.build(path=url, rm=True, tag='hardcode'):
+                self.write_message(dict(output=line.decode("utf-8")))
+        elif "images" in d:
             self.write_message(dict(
                 images=[i["RepoTags"][0] for i in CLIENT.images()]))
-        elif message == "containers":
+        elif "containers" in d:
             self.write_message(dict(
                 containers=[i["Names"][0] for i in CLIENT.containers()]))
-
         else:
             self.write_message(dict(message="Client error"))
 
