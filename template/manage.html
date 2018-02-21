@@ -8,20 +8,23 @@
 <script src="/static/websockets.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <div>
-        <div style="background-color:green; width:50%; float:left">
+        <div style="background-color:blue; width:50%; float:left">
             Images:<hr>
             <input type="submit" value="Load" onclick="load('images')">
             <ul id="print_images"></ul>
         </div>
-        <div style="background-color:yellow; width:50%; float:right">
-            Running Containers:<hr>
+        <div style="background-color:red; width:50%; float:right">
+            Containers:<hr>
             <input type="submit" value="Load" onclick="load('containers')">
             <ul id="print_containers"></ul>
         </div>
     </div>
-    <div style="clear:both">Enter the url-address containing the directory with the Dockerfile:
-        <input type="text" id="url"><input type="button" value="Build" onclick="load('url-address')">
-        <ul id="output" style="background-color:grey"></ul>
+    <div style="clear:both; background-color:yellow">
+        Enter the url-address containing the directory with the Dockerfile:
+        <input type="text" id="url" placeholder="url"><br/>Enter tag for image:
+        <input type="text" id="tag_image" placeholder="tag"><br/>
+        <input type="button" value="Build" onclick="load('url-address')">
+        <ul id="print_output" style="background-color:grey"></ul>
     </div>
 </body>
 </html>

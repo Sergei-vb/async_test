@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import random
 import logging
 import json
 from subprocess import PIPE
@@ -50,22 +51,25 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         d = json.loads(message)
         if "url-address" in d:
+            if d["tag_image"] == "default":
+                d["tag_image"] = "default{}".format(random.randint(1, 100000))
             url = "{}.git".format(d["url-address"])
-            for line in CLIENT.build(path=url, rm=True, tag='hardcode'):
+            for line in CLIENT.build(path=url, rm=True, tag=d["tag_image"]):
                 self.write_message(dict(output=line.decode("utf-8")))
         elif "images" in d:
             self.write_message(dict(
                 images=[i["RepoTags"][0] for i in CLIENT.images()]))
         elif "containers" in d:
             self.write_message(dict(
-                containers=[i["Names"][0] for i in CLIENT.containers()]))
+                containers=list(filter(
+                    lambda x: x != os.getenv("PROJ_CONT"),
+                    [i["Names"][0] for i in CLIENT.containers(all=True)]))))
         elif "run" in d:
             container = CLIENT.create_container(
                 image=d["elem"], command='/bin/sleep 9000')
             CLIENT.start(container=container.get("Id"))
         elif "stop" in d:
-            container = CLIENT.stop(container=d["elem"])
-            CLIENT.remove_container(container=container.get("Id"))
+            CLIENT.stop(container=d["elem"])
         else:
             self.write_message(dict(message="Client error"))
 

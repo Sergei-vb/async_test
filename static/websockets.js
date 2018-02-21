@@ -3,7 +3,9 @@ function load(key_from_html, elem) {
         ws.onopen = function() {
            var dict = {};
            if (key_from_html == "url-address") {
+           $("#print_output").empty();
            dict[key_from_html] = $("#url").val();
+           dict["tag_image"] = $("#tag_image").val() || "default";
            } else if (key_from_html == "run") {
            dict[key_from_html] = key_from_html;
            dict["elem"] = elem;
@@ -38,7 +40,7 @@ function load(key_from_html, elem) {
                  break;
               case "url-address":
                  for (key in parsejson) {
-                 $("#output").append("<li>" + parsejson[key] + "</li>");
+                 $("#print_output").append("<li>" + parsejson[key] + "</li>");
                  };
                  break;
               default:
