@@ -59,6 +59,13 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         elif "containers" in d:
             self.write_message(dict(
                 containers=[i["Names"][0] for i in CLIENT.containers()]))
+        elif "run" in d:
+            container = CLIENT.create_container(
+                image=d["elem"], command='/bin/sleep 9000')
+            CLIENT.start(container=container.get("Id"))
+        elif "stop" in d:
+            container = CLIENT.stop(container=d["elem"])
+            CLIENT.remove_container(container=container.get("Id"))
         else:
             self.write_message(dict(message="Client error"))
 

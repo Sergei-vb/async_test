@@ -1,19 +1,20 @@
-function load(key_from_html) {
-        var ws = new WebSocket("ws://" + location.host + "/load_from_docker/");
+function load(key_from_html, elem) {
+        var ws = new WebSocket("ws://" + location.hostname + ":8888" + "/load_from_docker/");
         ws.onopen = function() {
-           console.log("opened");
+           var dict = {};
            if (key_from_html == "url-address") {
-           var value_url = $("#url").val()
-           var dict = {};
-           dict[key_from_html] = value_url;
-           dict = JSON.stringify(dict);
-           ws.send(dict);
-           } else {
-           var dict = {};
+           dict[key_from_html] = $("#url").val();
+           } else if (key_from_html == "run") {
            dict[key_from_html] = key_from_html;
+           dict["elem"] = elem;
+           } else if (key_from_html == "stop") {
+           dict[key_from_html] = key_from_html;
+           dict["elem"] = elem.slice(1);
+           } else {
+           dict[key_from_html] = key_from_html;
+           };
            dict = JSON.stringify(dict);
            ws.send(dict);
-           }
         };
         ws.onmessage = function (evt) {
            var getjson = evt.data;
@@ -23,12 +24,16 @@ function load(key_from_html) {
            switch (key_from_html) {
               case "images":
                  for (key in parsejson.images) {
-                 $("#print_images").append("<li>" + parsejson.images[key] + "</li>");
+                 $("#print_images").append("<li>" + parsejson.images[key] +
+                 "</li>" + "<button onclick='load(\"run\", \"" + parsejson.images[key] +
+                 "\")'>Run Container</button>");
                  };
                  break;
               case "containers":
                  for (key in parsejson.containers) {
-                 $("#print_containers").append("<li>" + parsejson.containers[key] + "</li>");
+                 $("#print_containers").append("<li>" + parsejson.containers[key] +
+                 "</li>" + "<button onclick='load(\"stop\", \"" + parsejson.containers[key] +
+                 "\")'>Stop Container</button>");
                  };
                  break;
               case "url-address":
