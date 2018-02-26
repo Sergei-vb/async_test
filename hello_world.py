@@ -53,7 +53,7 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
             kwargs["tag_image"] = "default{}".format(random.randint(1, 100000))
         url = "{}.git".format(kwargs["url_address"])
         for line in CLIENT.build(path=url, rm=True, tag=kwargs["tag_image"]):
-            self.write_message(dict(output=line.decode("utf-8")))
+            self.write_message(dict(output=json.loads(line)["stream"]))
 
     def _images(self, **kwargs):
         self.write_message(dict(
