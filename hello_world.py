@@ -53,34 +53,37 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
             kwargs["tag_image"] = "default{}".format(random.randint(1, 100000))
         url = "{}.git".format(kwargs["url_address"])
         for line in CLIENT.build(path=url, rm=True, tag=kwargs["tag_image"]):
-            self.write_message(dict(output=json.loads(line)["stream"]))
+            self.write_message(dict(
+                output=list(json.loads(line).values())[0],
+                method=kwargs["method"]))
 
     def _images(self, **kwargs):
         self.write_message(dict(
-            images=[i["RepoTags"][0] for i in CLIENT.images()]))
+            images=[i["RepoTags"][0] for i in CLIENT.images()],
+            method=kwargs["method"]))
 
     def _containers(self, **kwargs):
         self.write_message(dict(
             containers=list(filter(
                 lambda x: x[0] != os.getenv("PROJ_CONT"),
                 [(i["Names"][0], i["Status"]) for i in CLIENT.containers(
-                    all=True)]))))
+                    all=True)])), method=kwargs["method"]))
 
     def _create(self, **kwargs):
         CLIENT.create_container(image=kwargs["elem"], command='/bin/sleep 999')
-        self._containers()
+        self._containers(**kwargs)
 
     def _start(self, **kwargs):
         CLIENT.start(container=kwargs["elem"])
-        self._containers()
+        self._containers(**kwargs)
 
     def _stop(self, **kwargs):
         CLIENT.stop(container=kwargs["elem"], timeout=1)
-        self._containers()
+        self._containers(**kwargs)
 
     def _remove(self, **kwargs):
         CLIENT.remove_container(container=kwargs["elem"])
-        self._containers()
+        self._containers(**kwargs)
 
     def on_message(self, message):
         d = json.loads(message)
@@ -90,7 +93,8 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         if d["method"] in general.keys():
             general[d["method"]](**d)
         else:
-            self.write_message(dict(message="Client error"))
+            self.write_message(
+                dict(message="Client error", method=d["method"]))
 
     def on_close(self):
         logging.info("WebSocket closed")
