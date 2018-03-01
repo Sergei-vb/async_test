@@ -31,15 +31,9 @@ class RequestAsync(tornado.web.RequestHandler):
         self.write(out)
 
 
-class Manage(tornado.web.RequestHandler):
-    def get(self):
-        self.render("manage.html")
-
-
 def make_app():
     return tornado.web.Application([
         (r"/fortune/", RequestAsync),
-        (r"/manage/", Manage),
         (r"/load_from_docker/", DockerWebSocket),
     ], **SETTINGS)
 
