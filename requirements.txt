@@ -2,3 +2,4 @@
 tornado==4.5.3
 docker==3.0.1
 celery==4.1.0
+pylint==1.8.2
