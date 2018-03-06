@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """The module that performs Back-end logic."""
 import os
-import random
 import logging
 import json
 
@@ -43,17 +42,18 @@ class RequestAsync(tornado.web.RequestHandler):
 
 
 class TasksManager:
+    """A class that manages tasks callbacks."""
     callbacks = dict()
 
     def register(self, task, callback):
+        """Adds new pair 'task-callback' to the callbacks poll."""
         self.callbacks[task] = callback
 
-    def notify_сallbacks(self):
+    def notify_callbacks(self):
+        """Rises callbacks in poll."""
         for task, callback in self.callbacks.items():
             if task.state == 'PROGRESS':
                 callback(task.info['line'])
-
-    # TODO: remove ready items
 
 
 def make_app():
@@ -134,7 +134,9 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
     # def callback(self):
     #     self.write_message(
     #         dict(output='Build completed.'))
+
     def callback(self, lines):
+        """Translate the output results of building docker images to the client."""
         # for line in lines:
         line = lines[len(lines)-1]
         self.write_message(
@@ -150,8 +152,8 @@ if __name__ == "__main__":
 
     APP.task_manager = TasksManager()
 
-    periodic_callback = tornado.ioloop.PeriodicCallback(APP.task_manager.notifyсallbacks, 3000)
-    periodic_callback.start()
+    PERIODIC_CALLBACK = tornado.ioloop.PeriodicCallback(APP.task_manager.notify_callbacks, 3000)
+    PERIODIC_CALLBACK.start()
 
     if os.getenv("PORT"):
         logging.info("Use your PORT: %s", os.getenv("PORT"))

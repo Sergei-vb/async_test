@@ -3,7 +3,7 @@ services:
   web:
     image: tornado_alpine
     environment:
-    #- PORT=8888
+    # - PORT=8888
     - PROJ_CONT=/project_container
     network_mode: "host"
     container_name: "project_container"

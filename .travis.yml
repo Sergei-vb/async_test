@@ -4,4 +4,4 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - pylint hello_world.py
+  - pylint hello_world.py messaging/tasks.py
