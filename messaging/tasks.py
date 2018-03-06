@@ -1,15 +1,14 @@
+"""Module Celery."""
 from celery import Celery
 
 import random
 import docker
 
-app = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
+APP = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
 
-# TODO: global?
 # CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
-
-@app.task
+@APP.task
 def build_image(**kwargs):
     CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -28,12 +27,12 @@ def build_image(**kwargs):
     # return 0
 
 
-@app.task(ignore_result=True)
+@APP.task(ignore_result=True)
 def print_hello():
     print('hello there')
 
 
-@app.task
+@APP.task
 def gen_prime(x):
     multiples = []
     results = []
