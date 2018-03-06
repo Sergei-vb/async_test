@@ -1,4 +1,5 @@
 """Tasks description module."""
+from celery import Celery
 
 import random
 import docker
@@ -8,7 +9,6 @@ from celery import Celery
 APP = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
 
 # CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
-
 
 @APP.task
 def build_image(**kwargs):
