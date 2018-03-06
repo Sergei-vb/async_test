@@ -1,17 +1,20 @@
-from celery import Celery
+"""Tasks description module."""
 
 import random
 import docker
 
-app = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
+from celery import Celery
+
+APP = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
 
 # TODO: global?
 # CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 
-@app.task
+@APP.task
 def build_image(**kwargs):
-    CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
+    """Builds docker image with specified parameters."""
+    client = docker.APIClient(base_url='unix://var/run/docker.sock')
 
     if kwargs["tag_image"] == "default":
         kwargs["tag_image"] = "default{}".format(random.randint(1, 100000))
@@ -22,24 +25,26 @@ def build_image(**kwargs):
 
     lines = []
 
-    for line in CLIENT.build(path=url, rm=True, tag=kwargs["tag_image"]):
+    for line in client.build(path=url, rm=True, tag=kwargs["tag_image"]):
         lines.append(line)
         build_image.update_state(state='PROGRESS', meta={'line': lines})
     # return 0
 
 
-@app.task(ignore_result=True)
+@APP.task(ignore_result=True)
 def print_hello():
+    """Test task."""
     print('hello there')
 
 
-@app.task
-def gen_prime(x):
+@APP.task
+def gen_prime(value):
+    """Long lasting test task."""
     multiples = []
     results = []
-    for i in range(2, x+1):
+    for i in range(2, value+1):
         if i not in multiples:
             results.append(i)
-            for j in range(i*i, x+1, i):
+            for j in range(i*i, value+1, i):
                 multiples.append(j)
     return results
