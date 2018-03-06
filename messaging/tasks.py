@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Tasks description module."""
 
 import random
@@ -8,7 +9,6 @@ from celery import Celery
 APP = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
 
 # CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
-
 
 @APP.task
 def build_image(**kwargs):
