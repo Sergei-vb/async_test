@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+"""The module that performs Back-end logic."""
 import os
 import random
 import logging
 import json
-from subprocess import PIPE
 
 import tornado.ioloop
 import tornado.web
@@ -12,7 +12,6 @@ import tornado.options
 import tornado.websocket
 from tornado.process import Subprocess
 import docker
-
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -23,15 +22,26 @@ SETTINGS = {
 
 
 class RequestAsync(tornado.web.RequestHandler):
+    """The class demonstrating the asynchrony of a tornado
+    in the form of a phrase display."""
+    def data_received(self, chunk):
+        """This is a redefinition of the abstract method."""
+        pass
+
     @tornado.gen.coroutine
-    def get(self):
-        process = Subprocess(["fortune"], stdout=PIPE, stderr=PIPE, shell=True)
-        yield process.wait_for_exit()
-        out, err = process.stdout.read(), process.stderr.read()
-        self.write(out)
+    def get(self, *args, **kwargs):
+        process = Subprocess(["fortune"], stdout=Subprocess.STREAM,
+                             stderr=Subprocess.STREAM, shell=True)
+        out, err = yield [process.stdout.read_until_close(),
+                          process.stderr.read_until_close()]
+        if err:
+            logging.fatal(err)
+        else:
+            self.write(out)
 
 
 def make_app():
+    """Routing."""
     return tornado.web.Application([
         (r"/fortune/", RequestAsync),
         (r"/load_from_docker/", DockerWebSocket),
@@ -39,7 +49,12 @@ def make_app():
 
 
 class DockerWebSocket(tornado.websocket.WebSocketHandler):
-    def open(self):
+    """The class creates a basic WebSocket handler."""
+    def data_received(self, chunk):
+        """This is a redefinition of the abstract method."""
+        pass
+
+    def open(self, *args, **kwargs):
         logging.info("WebSocket opened")
 
     def _url_address(self, **kwargs):
@@ -80,15 +95,15 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         self._containers(**kwargs)
 
     def on_message(self, message):
-        d = json.loads(message)
+        data = json.loads(message)
         general = dict(url_address=self._url_address, images=self._images,
                        containers=self._containers, create=self._create,
                        start=self._start, stop=self._stop, remove=self._remove)
-        if d["method"] in general.keys():
-            general[d["method"]](**d)
+        if data["method"] in general.keys():
+            general[data["method"]](**data)
         else:
             self.write_message(
-                dict(message="Client error", method=d["method"]))
+                dict(message="Client error", method=data["method"]))
 
     def on_close(self):
         logging.info("WebSocket closed")
@@ -96,10 +111,10 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
-    app = make_app()
+    APP = make_app()
     if os.getenv("PORT"):
-        logging.info("Use your PORT: {}".format(os.getenv("PORT")))
+        logging.info("Use your PORT: %s", os.getenv("PORT"))
     else:
         logging.info("Use default PORT: 8889")
-    app.listen(os.getenv("PORT", 8889))
+    APP.listen(os.getenv("PORT", 8889))
     tornado.ioloop.IOLoop.current().start()
