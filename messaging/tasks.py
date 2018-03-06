@@ -1,3 +1,4 @@
+"""Module Celery."""
 from celery import Celery
 
-app = Celery('tasks', backend='amqp', broker='amqp://')
+APP = Celery('tasks', backend='amqp', broker='amqp://')
