@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 """Tasks description module."""
-
 import random
 import docker
 
