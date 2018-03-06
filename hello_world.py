@@ -48,12 +48,13 @@ class TasksManager:
     def register(self, task, callback):
         self.callbacks[task] = callback
 
-    def notifyсallbacks(self):
+    def notify_сallbacks(self):
         for task, callback in self.callbacks.items():
             if task.state == 'PROGRESS':
                 callback(task.info['line'])
 
     # TODO: remove ready items
+
 
 def make_app():
     """Routing."""
@@ -73,7 +74,7 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def _url_address(self, **kwargs):
-        app.task_manager.register(tasks.build_image.delay(**kwargs), self.callback)
+        APP.task_manager.register(tasks.build_image.delay(**kwargs), self.callback)
         self.write_message(
             dict(
                 output='Building image...',
@@ -122,9 +123,6 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         logging.info("WebSocket closed")
-
-    def test_celery(self):
-        tasks.print_hello()
 
     # def callback(self, line, **kwargs):
     #     self.write_message(
