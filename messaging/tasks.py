@@ -7,7 +7,6 @@ from celery import Celery
 
 APP = Celery('tasks', backend='rpc://', broker='amqp://', include=['messaging.tasks'])
 
-# TODO: global?
 # CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 
