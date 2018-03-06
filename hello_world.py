@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import random
 import logging
 import json
 from subprocess import PIPE
@@ -12,6 +11,8 @@ import tornado.options
 import tornado.websocket
 from tornado.process import Subprocess
 import docker
+
+from messaging import tasks
 
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -31,6 +32,19 @@ class RequestAsync(tornado.web.RequestHandler):
         self.write(out)
 
 
+class TasksManager:
+    callbacks = dict()
+
+    def register(self, task, callback):
+        self.callbacks[task] = callback
+
+    def notifyсallbacks(self):
+        for task, callback in self.callbacks.items():
+            if task.state == 'PROGRESS':
+                callback(task.info['line'])
+
+    # TODO: remove ready items
+
 def make_app():
     return tornado.web.Application([
         (r"/fortune/", RequestAsync),
@@ -43,13 +57,13 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def _url_address(self, **kwargs):
-        if kwargs["tag_image"] == "default":
-            kwargs["tag_image"] = "default{}".format(random.randint(1, 100000))
-        url = "{}.git".format(kwargs["url_address"])
-        for line in CLIENT.build(path=url, rm=True, tag=kwargs["tag_image"]):
-            self.write_message(dict(
-                output=list(json.loads(line).values())[0],
-                method=kwargs["method"]))
+        app.task_manager.register(tasks.build_image.delay(**kwargs), self.callback)
+        self.write_message(
+            dict(
+                output='Building image...',
+                method=kwargs["method"]
+            )
+        )
 
     def _images(self, **kwargs):
         self.write_message(dict(
@@ -81,9 +95,15 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         d = json.loads(message)
-        general = dict(url_address=self._url_address, images=self._images,
-                       containers=self._containers, create=self._create,
-                       start=self._start, stop=self._stop, remove=self._remove)
+        general = dict(url_address=self._url_address,
+                       images=self._images,
+                       containers=self._containers,
+                       create=self._create,
+                       start=self._start,
+                       stop=self._stop,
+                       remove=self._remove,
+                       test_celery=self.test_celery,
+                       )
         if d["method"] in general.keys():
             general[d["method"]](**d)
         else:
@@ -93,13 +113,42 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
     def on_close(self):
         logging.info("WebSocket closed")
 
+    def test_celery(self):
+        tasks.print_hello()
+
+    # def callback(self, line, **kwargs):
+    #     self.write_message(
+    #         dict(
+    #             output=list(json.loads(line).values())[0],
+    #             method=kwargs["method"]
+    #             )
+    #         )
+    # def callback(self):
+    #     self.write_message(
+    #         dict(output='Build completed.'))
+    def callback(self, lines):
+        # for line in lines:
+        line = lines[len(lines)-1]
+        self.write_message(
+            dict(
+                output=list(json.loads(line).values())[0],
+                )
+            )
+
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
+
     app = make_app()
+    app.task_manager = TasksManager()
+
+    periodic_callback = tornado.ioloop.PeriodicCallback(app.task_manager.notifyсallbacks, 3000)
+    periodic_callback.start()
+
     if os.getenv("PORT"):
         logging.info("Use your PORT: {}".format(os.getenv("PORT")))
     else:
         logging.info("Use default PORT: 8889")
     app.listen(os.getenv("PORT", 8889))
+
     tornado.ioloop.IOLoop.current().start()
