@@ -53,7 +53,7 @@ class TasksManager:
         """Rises callbacks in poll."""
         for task, callback in self.callbacks.items():
             if task.state == 'PROGRESS':
-                callback(task.info['line'])
+                callback(task.info['line'], task.info['method'])
 
 
 def make_app():
@@ -74,7 +74,8 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def _url_address(self, **kwargs):
-        APP.task_manager.register(tasks.build_image.delay(**kwargs), self.callback)
+        APP.task_manager.register(tasks.build_image.delay(**kwargs),
+                                  self.callback)
         self.write_message(
             dict(
                 output='Building image...',
@@ -124,24 +125,14 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
     def on_close(self):
         logging.info("WebSocket closed")
 
-    # def callback(self, line, **kwargs):
-    #     self.write_message(
-    #         dict(
-    #             output=list(json.loads(line).values())[0],
-    #             method=kwargs["method"]
-    #             )
-    #         )
-    # def callback(self):
-    #     self.write_message(
-    #         dict(output='Build completed.'))
-
-    def callback(self, lines):
-        """Translate the output results of building docker images to the client."""
-        # for line in lines:
+    def callback(self, lines, method):
+        """Translate the output results of building docker images
+        to the client."""
         line = lines[len(lines)-1]
         self.write_message(
             dict(
-                output=list(json.loads(line).values())[0],
+                output=line,
+                method=method
                 )
             )
 
@@ -152,7 +143,8 @@ if __name__ == "__main__":
 
     APP.task_manager = TasksManager()
 
-    PERIODIC_CALLBACK = tornado.ioloop.PeriodicCallback(APP.task_manager.notify_callbacks, 3000)
+    PERIODIC_CALLBACK = tornado.ioloop.PeriodicCallback(
+        APP.task_manager.notify_callbacks, 3000)
     PERIODIC_CALLBACK.start()
 
     if os.getenv("PORT"):
