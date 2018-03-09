@@ -66,6 +66,9 @@ def make_app():
 
 class DockerWebSocket(tornado.websocket.WebSocketHandler):
     """The class creates a basic WebSocket handler."""
+
+    build_lines_count = 0
+
     def data_received(self, chunk):
         """This is a redefinition of the abstract method."""
         pass
@@ -130,13 +133,14 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
     def callback(self, lines, method):
         """Translate the output results of building docker images
         to the client."""
-        line = lines[len(lines)-1]
-        self.write_message(
-            dict(
-                output=line,
-                method=method
+        for line_n in range(self.build_lines_count, len(lines)-1):
+            self.write_message(
+                dict(
+                    output=lines[line_n],
+                    method=method
+                    )
                 )
-            )
+        self.build_lines_count = len(lines)-1
 
 
 if __name__ == "__main__":
