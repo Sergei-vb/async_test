@@ -74,8 +74,10 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def _url_address(self, **kwargs):
-        APP.task_manager.register(tasks.build_image.delay(**kwargs),
-                                  self.callback)
+        APP.task_manager.register(
+            tasks.build_image.delay(**kwargs),
+            self.callback)
+
         self.write_message(
             dict(
                 output='Building image...',
