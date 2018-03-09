@@ -1,10 +1,9 @@
+#!/usr/bin/env python3
 """Tasks description module."""
-import random
 import json
 
-import docker
-
 from celery import Celery
+import docker
 
 from at_logging import build_log
 
@@ -23,11 +22,7 @@ def build_image(**kwargs):
 
     build_log.write('Started building an image...')
 
-    if kwargs["tag_image"] == "default":
-        kwargs["tag_image"] = "default{}".format(random.randint(1, 100000))
-
     url = "{}.git".format(kwargs["url_address"])
-
     lines = []
 
     for line in CLIENT.build(path=url, rm=True, tag=kwargs["tag_image"]):

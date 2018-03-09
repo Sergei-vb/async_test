@@ -108,5 +108,4 @@ venv.bak/
 .idea/
 
 # debug files
-*.html
-*.js
+celeryd.pid
