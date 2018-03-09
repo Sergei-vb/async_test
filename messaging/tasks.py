@@ -40,22 +40,3 @@ def build_image(**kwargs):
                                  meta={'line': lines,
                                        'method': kwargs['method']}
                                  )
-
-
-@APP.task(ignore_result=True)
-def print_hello():
-    """Test task."""
-    print('hello there')
-
-
-@APP.task
-def gen_prime(value):
-    """Long lasting test task."""
-    multiples = []
-    results = []
-    for i in range(2, value+1):
-        if i not in multiples:
-            results.append(i)
-            for j in range(i*i, value+1, i):
-                multiples.append(j)
-    return results
