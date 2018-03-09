@@ -5,6 +5,8 @@ import docker
 
 from celery import Celery
 
+from at_logging import build_log
+
 APP = Celery('tasks',
              backend='rpc://',
              broker='amqp://',
@@ -18,8 +20,7 @@ CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 def build_image(**kwargs):
     """Builds docker image with specified parameters."""
 
-    with open("/home/wis/dev/backend/async_test/log.txt", 'at') as logfile:
-        logfile.write("build starting...\n")
+    build_log.write('Started building an image...')
 
     if kwargs["tag_image"] == "default":
         kwargs["tag_image"] = "default{}".format(random.randint(1, 100000))
@@ -32,8 +33,7 @@ def build_image(**kwargs):
 
         line_str = list(json.loads(line).values())[0]
 
-        with open("/home/wis/dev/backend/async_test/log.txt", 'at') as logfile:
-            logfile.write(line_str)
+        build_log.write(line_str)
 
         lines.append(line_str)
         build_image.update_state(state='PROGRESS',
