@@ -1,3 +1,4 @@
+"""Logging of images building output."""
 import logging
 from os import getcwd
 from pathlib import Path
@@ -12,10 +13,11 @@ _LOG.setLevel(logging.INFO)
 
 Path(_LOGDIR).mkdir(parents=True, exist_ok=True)
 
-file_handler = logging.FileHandler(_LOGDIR + _LOGNAME + ".log")
-file_handler.setFormatter(logging.Formatter(_FORMAT_STR))
-_LOG.addHandler(file_handler)
+FILE_HANDLER = logging.FileHandler(_LOGDIR + _LOGNAME + ".log")
+FILE_HANDLER.setFormatter(logging.Formatter(_FORMAT_STR))
+_LOG.addHandler(FILE_HANDLER)
 
 
 def write(line):
+    """Writes a line into logfile."""
     _LOG.info(line)
