@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
 """The module that performs Back-end logic."""
-import os
-import logging
 import json
+import logging
+import os
 
-import tornado.ioloop
-import tornado.web
-import tornado.gen
-import tornado.options
-import tornado.websocket
-from tornado.process import Subprocess
 import docker
+import tornado.gen
+import tornado.ioloop
+import tornado.options
+import tornado.process
+import tornado.web
+import tornado.websocket
 
 from messaging import tasks
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
-
-SETTINGS = {
-    "template_path": os.path.join(os.path.dirname(__file__), "template"),
-    "static_path": os.path.join(os.path.dirname(__file__), "static"),
-}
 
 
 class RequestAsync(tornado.web.RequestHandler):
@@ -31,8 +26,9 @@ class RequestAsync(tornado.web.RequestHandler):
 
     @tornado.gen.coroutine
     def get(self, *args, **kwargs):
-        process = Subprocess(["fortune"], stdout=Subprocess.STREAM,
-                             stderr=Subprocess.STREAM, shell=True)
+        process = tornado.process.Subprocess(
+            ["fortune"], stdout=tornado.process.Subprocess.STREAM,
+            stderr=tornado.process.Subprocess.STREAM, shell=True)
         out, err = yield [process.stdout.read_until_close(),
                           process.stderr.read_until_close()]
         if err:
@@ -61,7 +57,7 @@ def make_app():
     return tornado.web.Application([
         (r"/fortune/", RequestAsync),
         (r"/load_from_docker/", DockerWebSocket),
-    ], **SETTINGS)
+    ])
 
 
 class DockerWebSocket(tornado.websocket.WebSocketHandler):
@@ -93,13 +89,14 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
 
     def _containers(self, **kwargs):
         self.write_message(dict(
-            containers=list(filter(
-                lambda x: x[0] != os.getenv("PROJ_CONT"),
-                [(i["Names"][0], i["Status"]) for i in CLIENT.containers(
-                    all=True)])), method=kwargs["method"]))
+            containers=[(i["Names"][0], i["Status"])
+                        for i in CLIENT.containers(all=True,
+                                                   filters={"label": "out"})],
+            method=kwargs["method"]))
 
     def _create(self, **kwargs):
-        CLIENT.create_container(image=kwargs["elem"], command='/bin/sleep 999')
+        CLIENT.create_container(image=kwargs["elem"], command='/bin/sleep 999',
+                                labels=["out"])
         self._containers(**kwargs)
 
     def _start(self, **kwargs):
@@ -107,7 +104,7 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         self._containers(**kwargs)
 
     def _stop(self, **kwargs):
-        CLIENT.stop(container=kwargs["elem"], timeout=1)
+        CLIENT.stop(container=kwargs["elem"], timeout=0)
         self._containers(**kwargs)
 
     def _remove(self, **kwargs):
@@ -119,7 +116,11 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         general = dict(url_address=self._url_address, images=self._images,
                        containers=self._containers, create=self._create,
                        start=self._start, stop=self._stop, remove=self._remove)
-        if data["method"] in general.keys():
+        if data["method"] == "url_address" and not data["tag_image"]:
+            self.write_message(
+                dict(message="You need to specify a tag for the image!",
+                     method="error"))
+        elif data["method"] in general.keys():
             general[data["method"]](**data)
         else:
             self.write_message(
