@@ -77,10 +77,8 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def _url_address(self, **kwargs):
-        APP.task_manager.register(
-            tasks.build_image.delay(**kwargs),
-            self.callback)
-
+        APP.task_manager.register(tasks.build_image.delay(**kwargs),
+                                  self.callback)
         self.write_message(
             dict(
                 output='Building image...',
@@ -133,6 +131,7 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
     def callback(self, lines, method):
         """Translate the output results of building docker images
         to the client."""
+
         for line_n in range(self.build_lines_count, len(lines)-1):
             self.write_message(
                 dict(

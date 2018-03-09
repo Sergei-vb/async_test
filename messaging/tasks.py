@@ -1,6 +1,8 @@
 """Tasks description module."""
 import json
 import random
+import json
+
 import docker
 
 from celery import Celery
