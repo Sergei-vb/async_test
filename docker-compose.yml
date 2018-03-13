@@ -1,11 +1,16 @@
 version: '3'
 services:
   web:
-    image:
+    image: tornado_alpine
+    external_links:
+    - rabbitmq
     environment:
     - PORT=8888
-    network_mode: "host"
-    command: celery worker -A messaging.tasks -E -D -l=DEBUG &
+#    network_mode: "host"
+    ports:
+    - "8888:8888"
+    - "5555:5555"
+    command: celery worker -A messaging.tasks -E -D -l=DEBUG
     command: celery flower
     volumes:
      - .:/app
