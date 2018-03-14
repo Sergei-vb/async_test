@@ -2,16 +2,15 @@ version: '3'
 services:
   web:
     image: tornado_alpine
-    external_links:
-    - rabbitmq
     environment:
     - PORT=8888
-#    network_mode: "host"
-    ports:
-    - "8888:8888"
-    - "5555:5555"
-    command: celery worker -A messaging.tasks -E -D -l=DEBUG
-    command: celery flower
+    network_mode: "host"
+
+    entrypoint:
+      - sh
+      - -c
+      - "./hello_world.py --logging=info --log-file-prefix=/var/log/hello_world.log &
+                    celery worker -A messaging.tasks -E -l=DEBUG"
     volumes:
      - .:/app
      - /var/log/hello_world:/var/log/
