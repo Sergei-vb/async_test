@@ -11,7 +11,7 @@ APP = Celery('tasks',
              backend='rpc://',
              broker='amqp://',
              include=['messaging.tasks']
-             )
+            )
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -35,4 +35,4 @@ def build_image(**kwargs):
         build_image.update_state(state='PROGRESS',
                                  meta={'line': lines,
                                        'method': kwargs['method']}
-                                 )
+                                )

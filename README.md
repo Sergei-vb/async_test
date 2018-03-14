@@ -30,6 +30,7 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
 
 ### Run in virtualenv
 First, install RabbitMQ: ```https://www.rabbitmq.com/download.html```
+
 in terminal:
 * patching:
    * ```cp file.patch /CATALOG_VIRTUALENV/lib/python3.6/site-packages/tornado```
