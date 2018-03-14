@@ -14,7 +14,7 @@
 ### Dependencies
 #### This application works in conjunction with:
 * https://github.com/HighHopesInt/HighHopes
-* https://github.com/Sergei-vb/docker_database
+* https://github.com/Sergei-vb/docker_repositories
 
 ### Installation
 1. [Docker](https://docs.docker.com/install/ "Docker")
