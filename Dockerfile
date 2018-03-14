@@ -15,5 +15,3 @@ RUN apk add --no-cache python3 fortune && \
     cp file.patch /usr/lib/python3.6/site-packages/tornado && \
     cd /usr/lib/python3.6/site-packages/tornado && \
     patch -p0 < file.patch
-
-CMD ["./hello_world.py", "--logging=info", "--log-file-prefix=/var/log/hello_world.log"]
