@@ -11,7 +11,7 @@ APP = Celery('tasks',
              backend='rpc://',
              broker='amqp://',
              include=['messaging.tasks']
-            )
+             )
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -24,9 +24,9 @@ def build_image(**kwargs):
 
     url = "{}.git".format(kwargs["url_address"])
     lines = []
+    tag_image = kwargs["tag_image"].lower()
 
-    for line in CLIENT.build(path=url, rm=True, tag=kwargs["tag_image"]):
-
+    for line in CLIENT.build(path=url, rm=True, tag=tag_image):
         line_str = list(json.loads(line).values())[0]
 
         build_log.write(line_str)
@@ -35,4 +35,4 @@ def build_image(**kwargs):
         build_image.update_state(state='PROGRESS',
                                  meta={'line': lines,
                                        'method': kwargs['method']}
-                                )
+                                 )
