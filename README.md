@@ -29,17 +29,18 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
 3. Run Container: ```docker-compose up```
 
 ### Run in virtualenv
+First, install RabbitMQ: ```https://www.rabbitmq.com/download.html```
 in terminal:
 * patching:
    * ```cp file.patch /CATALOG_VIRTUALENV/lib/python3.6/site-packages/tornado```
    * ```cd /CATALOG_VIRTUALENV/lib/python3.6/site-packages/tornado```
    * ```patch -p0 < file.patch```
 * ```PORT=8888 ./hello_world.py```
-* ```celery worker -A messaging.tasks -E -D -l=DEBUG &```
+* ```celery worker -A messaging.tasks -E -D -l=DEBUG```
 * ```celery flower```
 
 #### Stop the celery worker
-* ```pkill -9 -f 'celery worker' &```
+* ```pkill -9 -f 'celery worker'```
 
 ### Create image
 To create an image, you need a link to the github repository with a Dockerfile, like this: ```https://github.com/Sergeivb/async_test```
