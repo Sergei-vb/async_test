@@ -1,12 +1,16 @@
 version: '3'
 services:
   web:
-    image: tornado_alpine
+    image:
     environment:
     - PORT=8888
-    - PROJ_CONT=/project_container
     network_mode: "host"
-    container_name: "project_container"
+
+    entrypoint:
+      - sh
+      - -c
+      - "./hello_world.py --logging=info --log-file-prefix=/var/log/hello_world.log &
+                    celery worker -A messaging.tasks -E -l=DEBUG"
     volumes:
      - .:/app
      - /var/log/hello_world:/var/log/
