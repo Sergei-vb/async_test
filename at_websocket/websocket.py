@@ -3,6 +3,7 @@
 import logging
 
 import tornado.websocket
+from tornado.web import MissingArgumentError
 
 
 class SecWebSocket(tornado.websocket.WebSocketHandler):
@@ -12,8 +13,14 @@ class SecWebSocket(tornado.websocket.WebSocketHandler):
         super().__init__(application, request, **kwargs)
 
     def get(self, *args, **kwargs):
-        self.user_id = self.get_argument('user_id')
-        super().get(*args, **kwargs)
+        try:
+            self.user_id = self.get_argument('user_id')
+            super().get(*args, **kwargs)
+        except MissingArgumentError:
+            log_msg = "Need 'user_id' query argument to proceed."
+            self.set_status(400, log_msg)
+            self.finish(log_msg)
+            return
 
     def open(self, *args, **kwargs):
         logging.info("WebSocket opened")
