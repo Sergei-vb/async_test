@@ -1,4 +1,4 @@
-# Async_test
+# coralline-rpc
 
 ## Table of contents
 - [Getting Started](#getting-started)
@@ -13,8 +13,8 @@
 
 ### Dependencies
 #### This application works in conjunction with:
-* https://github.com/HighHopesInt/HighHopes
-* https://github.com/Sergei-vb/docker_repositories
+* https://github.com/HighHopesInt/coralline-dashboard
+* https://github.com/Sergei-vb/coralline-components
 
 ### Installation
 1. [Docker](https://docs.docker.com/install/ "Docker")
@@ -29,19 +29,15 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
 3. Run Container: ```docker-compose up```
 
 ### Run in virtualenv
-First, install RabbitMQ: ```https://www.rabbitmq.com/download.html```
+* You need setup:
+  * Supervisor: ```http://supervisord.org/installing.html```
+  * Virtualenv: ```https://virtualenv.pypa.io/en/stable/installation/```
+  * Python 3.6 ```https://www.python.org/downloads/```
 
-in terminal:
-* patching:
-   * ```cp file.patch /CATALOG_VIRTUALENV/lib/python3.6/site-packages/tornado```
-   * ```cd /CATALOG_VIRTUALENV/lib/python3.6/site-packages/tornado```
-   * ```patch -p0 < file.patch```
-* ```PORT=8888 ./hello_world.py```
-* ```celery worker -A messaging.tasks -E -D -l=DEBUG```
-* ```celery flower```
+* and run script:
+  * ```./start.sh```
 
-#### Stop the celery worker
-* ```pkill -9 -f 'celery worker'```
+* The launch port of the tornado changes in the file "tornado_celery.conf"
 
 ### Create image
-To create an image, you need a link to the github repository with a Dockerfile, like this: ```https://github.com/Sergeivb/async_test```
+To create an image, you need a link to the github repository with a Dockerfile, like this: ```https://github.com/Sergeivb/coralline-rpc```
