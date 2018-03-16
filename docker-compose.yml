@@ -9,9 +9,9 @@ services:
     entrypoint:
       - sh
       - -c
-      - "./hello_world.py --logging=info --log-file-prefix=/var/log/hello_world.log &
+      - "./rpc_server.py --logging=info --log-file-prefix=/var/log/rpc_server.log &
                     celery worker -A messaging.tasks -E -l=DEBUG"
     volumes:
      - .:/app
-     - /var/log/hello_world:/var/log/
+     - /var/log/rpc_server:/var/log/
      - /var/run/docker.sock:/var/run/docker.sock
