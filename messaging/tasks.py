@@ -17,10 +17,12 @@ CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 
 @APP.task
-def build_image(**kwargs):
+def build_image(user_id, **kwargs):
     """Builds docker image with specified parameters."""
 
     build_log.write('Started building an image...')
+
+    build_log.write("USER_ID: " + user_id)
 
     url = "{}.git".format(kwargs["url_address"])
     lines = []
