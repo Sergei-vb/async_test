@@ -5,36 +5,14 @@ import logging
 import os
 
 import docker
-import tornado.gen
 import tornado.ioloop
 import tornado.options
-import tornado.process
 import tornado.web
 import tornado.websocket
 
 from messaging import tasks
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
-
-
-class RequestAsync(tornado.web.RequestHandler):
-    """The class demonstrating the asynchrony of a tornado
-    in the form of a phrase display."""
-    def data_received(self, chunk):
-        """This is a redefinition of the abstract method."""
-        pass
-
-    @tornado.gen.coroutine
-    def get(self, *args, **kwargs):
-        process = tornado.process.Subprocess(
-            ["fortune"], stdout=tornado.process.Subprocess.STREAM,
-            stderr=tornado.process.Subprocess.STREAM, shell=True)
-        out, err = yield [process.stdout.read_until_close(),
-                          process.stderr.read_until_close()]
-        if err:
-            logging.fatal(err)
-        else:
-            self.write(out)
 
 
 class TasksManager:
@@ -55,7 +33,6 @@ class TasksManager:
 def make_app():
     """Routing."""
     return tornado.web.Application([
-        (r"/fortune/", RequestAsync),
         (r"/load_from_docker/", DockerWebSocket),
     ])
 
