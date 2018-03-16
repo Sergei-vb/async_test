@@ -7,6 +7,7 @@ from tornado.web import MissingArgumentError
 
 
 class SecWebSocket(tornado.websocket.WebSocketHandler):
+    """Implements authentication."""
 
     def __init__(self, application, request, **kwargs):
         self.user_id = None
@@ -26,7 +27,8 @@ class SecWebSocket(tornado.websocket.WebSocketHandler):
         logging.info("WebSocket opened")
 
     def on_message(self, message):
-        super(SecWebSocket, self).on_message(message)
+        """This is a redefinition of the abstract method."""
+        pass
 
     def data_received(self, chunk):
         """This is a redefinition of the abstract method."""
