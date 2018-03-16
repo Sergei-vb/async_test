@@ -127,7 +127,7 @@ if __name__ == "__main__":
     APP.task_manager = TasksManager()
 
     PERIODIC_CALLBACK = tornado.ioloop.PeriodicCallback(
-        APP.task_manager.notify_callbacks, 3000)
+        APP.task_manager.notify_callbacks, 1000)
     PERIODIC_CALLBACK.start()
 
     if os.getenv("PORT"):
