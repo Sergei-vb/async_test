@@ -11,6 +11,7 @@ import tornado.web
 import tornado.websocket
 
 from messaging import tasks
+from at_websocket.websocket import SecWebSocket
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -37,21 +38,16 @@ def make_app():
     ])
 
 
-class DockerWebSocket(tornado.websocket.WebSocketHandler):
+class DockerWebSocket(SecWebSocket):
     """The class creates a basic WebSocket handler."""
 
     build_lines_count = 0
 
-    def data_received(self, chunk):
-        """This is a redefinition of the abstract method."""
-        pass
-
-    def open(self, *args, **kwargs):
-        logging.info("WebSocket opened")
-
     def _url_address(self, **kwargs):
-        APP.task_manager.register(tasks.build_image.delay(**kwargs),
-                                  self.callback)
+        APP.task_manager.register(
+            tasks.build_image.delay(self.user_id, **kwargs),
+            self.callback)
+
         self.write_message(
             dict(
                 output='Building image...',
@@ -102,9 +98,6 @@ class DockerWebSocket(tornado.websocket.WebSocketHandler):
         else:
             self.write_message(
                 dict(message="Client error", method=data["method"]))
-
-    def on_close(self):
-        logging.info("WebSocket closed")
 
     def callback(self, lines, method):
         """Translate the output results of building docker images
