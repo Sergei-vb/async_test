@@ -9,8 +9,10 @@ services:
     entrypoint:
       - sh
       - -c
-      - "./rpc_server.py --logging=info --log-file-prefix=/var/log/rpc_server.log &
-                    celery worker -A messaging.tasks -E -l=DEBUG"
+      - "/usr/bin/supervisord -n -c /etc/supervisord.conf &&
+         supervisorctl reread &&
+         supervisorctl update &&
+         supervisorctl start all"
     volumes:
      - .:/app
      - /var/log/rpc_server:/var/log/
