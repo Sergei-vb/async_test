@@ -109,3 +109,4 @@ venv.bak/
 
 # debug files
 celeryd.pid
+supervisord.pid
