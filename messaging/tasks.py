@@ -6,6 +6,7 @@ from celery import Celery
 import docker
 
 from at_logging import build_log
+from models import UserImage
 
 APP = Celery('tasks',
              backend='rpc://',
@@ -38,3 +39,11 @@ def build_image(user_id, **kwargs):
                                  meta={'line': lines,
                                        'method': kwargs['method']}
                                 )
+    image_id = list(filter(lambda x: x["RepoTags"][0] == tag_image,
+                           CLIENT.images()))[0]["Id"].split(":", 1)[1]
+    created = list(filter(lambda x: x["RepoTags"][0] == tag_image,
+                           CLIENT.images()))[0]["Created"]
+    size = list(filter(lambda x: x["RepoTags"][0] == tag_image,
+                           CLIENT.images()))[0]["Size"]
+    UserImage.objects.create(
+        user_id=user_id, image_id=image_id, created=created, size=size)

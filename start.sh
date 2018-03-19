@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# Database:
+export NAME=highhopes
+export USER=user
+export PASSWORD=yourpassword
+export HOST=127.0.0.1
+export PORTDB=3307
+
+mkdir logs
+
 virtualenv -p python3.6 venv
 source ./venv/bin/activate
 pip install -r requirements.txt

@@ -35,6 +35,7 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
   * Python 3.6 ```https://www.python.org/downloads/```
 
 * and run script:
+  * Fill the file start.sh with data from the database.
   * ```./start.sh```
 
 * The launch port of the tornado changes in the file "tornado_celery.conf"
