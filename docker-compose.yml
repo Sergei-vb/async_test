@@ -4,6 +4,12 @@ services:
     image:
     environment:
     - PORT=8888
+# Database:
+    - NAME=
+    - USER=
+    - PASSWORD=
+    - HOST=
+    - PORTDB=
     network_mode: "host"
 
     entrypoint:
@@ -14,6 +20,6 @@ services:
          supervisorctl update &&
          supervisorctl start all"
     volumes:
-     - .:/app
+#     - .:/app
      - /var/log/rpc_server:/var/log/
      - /var/run/docker.sock:/var/run/docker.sock

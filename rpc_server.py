@@ -4,6 +4,7 @@ import json
 import logging
 import os
 
+import django.conf
 import docker
 import tornado.ioloop
 import tornado.options
@@ -12,6 +13,20 @@ import tornado.websocket
 
 from messaging import tasks
 from at_websocket.websocket import SecWebSocket
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('NAME'),
+        'USER': os.getenv('USER'),
+        'PASSWORD': os.getenv('PASSWORD'),
+        'HOST': os.getenv('HOST'),
+        'PORT': os.getenv('PORTDB'),
+    }
+}
+
+django.conf.settings.configure(DATABASES=DATABASES)
+# django.setup()
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -103,14 +118,14 @@ class DockerWebSocket(SecWebSocket):
         """Translate the output results of building docker images
         to the client."""
 
-        for line_n in range(self.build_lines_count, len(lines)-1):
+        for line_n in range(self.build_lines_count, len(lines) - 1):
             self.write_message(
                 dict(
                     output=lines[line_n],
                     method=method
-                    )
                 )
-        self.build_lines_count = len(lines)-1
+            )
+        self.build_lines_count = len(lines) - 1
 
 
 if __name__ == "__main__":
