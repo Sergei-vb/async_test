@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Database:
-export NAME=highhopes
-export USER=user
-export PASSWORD=yourpassword
-export HOST=127.0.0.1
-export PORTDB=3307
+export NAME=
+export USER=
+export PASSWORD=
+export HOST=
+export PORTDB=
 
 mkdir logs
 
