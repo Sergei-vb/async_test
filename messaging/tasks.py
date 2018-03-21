@@ -1,30 +1,12 @@
 #!/usr/bin/env python3
 """Tasks description module."""
 import json
-import os
 import datetime
-
-from celery import Celery
-import django
-from django.conf import settings
 import docker
-import pymysql
 
+from messaging.app import APP
 from at_logging import build_log
-
-pymysql.install_as_MySQLdb()
-
-if not settings.configured:
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dj_settings")
-django.setup()
-
 from django_coralline_images.models import UserImage
-
-APP = Celery('tasks',
-             backend='rpc://',
-             broker='amqp://',
-             include=['messaging.tasks']
-            )
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
