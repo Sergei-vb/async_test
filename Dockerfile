@@ -14,6 +14,7 @@ RUN apk add --no-cache python3 supervisor git && \
     pip3 install -r requirements.txt && \
     mkdir -p /etc/supervisor.d/ && \
     cp tornado_celery_docker.ini /etc/supervisor.d/ && \
-    cp file.patch /usr/lib/python3.6/site-packages/tornado && \
+    cp run_supervisor_docker.sh /usr/local/bin/ && \
+    cp file.patch /usr/lib/python3.6/site-packages/tornado/ && \
     cd /usr/lib/python3.6/site-packages/tornado && \
     patch -p0 < file.patch
