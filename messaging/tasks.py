@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 """Tasks description module."""
 import json
+import os
+import datetime
 
 from celery import Celery
+import django
+from django.conf import settings
 import docker
+import pymysql
 
 from at_logging import build_log
-from models import UserImage
+
+pymysql.install_as_MySQLdb()
+
+if not settings.configured:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dj_settings")
+django.setup()
+
+from django_coralline_images.models import UserImage
 
 APP = Celery('tasks',
              backend='rpc://',
@@ -39,12 +51,20 @@ def build_image(user_id, **kwargs):
                                  meta={'line': lines,
                                        'method': kwargs['method']}
                                 )
+
+    tag_image = tag_image if ':' in tag_image else tag_image + ":latest"
+
+    build_log.write('tag_image = ' + tag_image)
+
     image_id = list(filter(lambda x: x["RepoTags"][0] == tag_image,
-                           CLIENT.images()))[0]["Id"].split(":", 1)[1]
-    created = list(filter(lambda x: x["RepoTags"][0] == tag_image,
-                          CLIENT.images()))[0]["Created"]
+                           CLIENT.images()))[0]["Id"]
+    # created = list(filter(lambda x: x["RepoTags"][0] == tag_image,
+    #                       CLIENT.images()))[0]["Created"]
+    created = datetime.datetime.now()
     size = list(filter(lambda x: x["RepoTags"][0] == tag_image,
                        CLIENT.images()))[0]["Size"]
-    user_image = UserImage(
-        user_id=user_id, image_id=image_id, created=created, size=size)
-    user_image.save()
+    UserImage.objects.create(
+        user_id=user_id,
+        image_id=image_id,
+        created=created,
+        size=size)
