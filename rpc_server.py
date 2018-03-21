@@ -4,7 +4,6 @@ import json
 import logging
 import os
 
-import django.conf
 import docker
 import tornado.ioloop
 import tornado.options
@@ -13,20 +12,6 @@ import tornado.websocket
 
 from messaging import tasks
 from at_websocket.websocket import SecWebSocket
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('NAME'),
-        'USER': os.getenv('USER'),
-        'PASSWORD': os.getenv('PASSWORD'),
-        'HOST': os.getenv('HOST'),
-        'PORT': os.getenv('PORTDB'),
-    }
-}
-
-django.conf.settings.configure(DATABASES=DATABASES)
-# django.setup()
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
