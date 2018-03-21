@@ -40,9 +40,9 @@ def build_image(user_id, **kwargs):
 
     image_id = list(filter(lambda x: x["RepoTags"][0] == tag_image,
                            CLIENT.images()))[0]["Id"]
-    # created = list(filter(lambda x: x["RepoTags"][0] == tag_image,
-    #                       CLIENT.images()))[0]["Created"]
-    created = datetime.datetime.now()
+    created = datetime.datetime.fromtimestamp(
+        list(filter(lambda x: x["RepoTags"][0] == tag_image,
+                    CLIENT.images()))[0]["Created"])
     size = list(filter(lambda x: x["RepoTags"][0] == tag_image,
                        CLIENT.images()))[0]["Size"]
     UserImage.objects.create(
