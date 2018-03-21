@@ -25,6 +25,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.contenttypes',
 
-    'messaging.tasks',
+    'messaging.app',
     'django_coralline_images',
 ]
