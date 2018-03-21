@@ -45,8 +45,9 @@ def build_image(user_id, **kwargs):
                     CLIENT.images()))[0]["Created"])
     size = list(filter(lambda x: x["RepoTags"][0] == tag_image,
                        CLIENT.images()))[0]["Size"]
-    UserImage.objects.create(
-        user_id=user_id,
-        image_id=image_id,
-        created=created,
-        size=size)
+
+    user_image = UserImage(user_id=user_id,
+                           image_id=image_id,
+                           created=created,
+                           size=size)
+    user_image.save()
