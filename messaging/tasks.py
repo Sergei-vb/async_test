@@ -2,11 +2,11 @@
 """Tasks description module."""
 import json
 import datetime
+from django_coralline_images.models import UserImage
 import docker
 
-from messaging.app import APP
 from at_logging import build_log
-from django_coralline_images.models import UserImage
+from messaging.app import APP
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -45,9 +45,9 @@ def build_image(user_id, **kwargs):
                     CLIENT.images()))[0]["Created"])
     size = list(filter(lambda x: x["RepoTags"][0] == tag_image,
                        CLIENT.images()))[0]["Size"]
-
-    user_image = UserImage(user_id=user_id,
-                           image_id=image_id,
-                           created=created,
-                           size=size)
+    user_image = UserImage(
+        user_id=user_id,
+        image_id=image_id,
+        created=created,
+        size=size)
     user_image.save()

@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
 
-# Database:
-export NAME=
-export USER=
-export PASSWORD=
-export HOST=
-export PORTDB=
-
-mkdir logs
-
 virtualenv -p python3.6 venv
 source ./venv/bin/activate
 pip install -r requirements.txt

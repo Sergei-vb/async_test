@@ -35,10 +35,8 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
   * Python 3.6 ```https://www.python.org/downloads/```
 
 * and run script:
-  * Fill the file start.sh with data from the database.
+  * Fill the file tornado_celery.conf where uses '...' with data from the database and data from home directory.
   * ```./start.sh```
-
-* The launch port of the tornado changes in the file "tornado_celery.conf"
 
 ### Create image
 To create an image, you need a link to the github repository with a Dockerfile, like this: ```https://github.com/Sergeivb/coralline-rpc```
