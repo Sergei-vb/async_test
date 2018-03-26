@@ -17,11 +17,15 @@ def build_image(user_id, **kwargs):
 
     build_log.write('Started building an image...')
 
-    build_log.write("USER_ID: " + user_id)
+    build_log.write("USER_ID: {}".format(user_id))
 
     url = "{}.git".format(kwargs["url_address"])
     lines = []
+
     tag_image = kwargs["tag_image"].lower()
+    tag_image = user_id + "/" + (tag_image if ':' in tag_image else tag_image + ":latest")
+
+    build_log.write("tag_image: {}".format(tag_image))
 
     for line in CLIENT.build(path=url, rm=True, tag=tag_image):
         line_str = list(json.loads(line).values())[0]
@@ -33,10 +37,6 @@ def build_image(user_id, **kwargs):
                                  meta={'line': lines,
                                        'method': kwargs['method']}
                                 )
-
-    tag_image = tag_image if ':' in tag_image else tag_image + ":latest"
-
-    build_log.write('tag_image = ' + tag_image)
 
     image_id = list(filter(lambda x: x["RepoTags"][0] == tag_image,
                            CLIENT.images()))[0]["Id"]
