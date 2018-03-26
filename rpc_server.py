@@ -43,6 +43,16 @@ class DockerWebSocket(SecWebSocket):
 
     build_lines_count = 0
 
+    def _get_user_images(self):
+        db_images = tasks.UserImage.objects.filter(
+            user_id=self.user_id
+        ).values().exclude(tag='')
+        all_images = CLIENT.images(quiet=True)
+
+        return [{'tag': i['tag'],
+                 'available': True if i['image_id'] in all_images else False}
+                for i in db_images]
+
     def _url_address(self, **kwargs):
         APP.task_manager.register(
             tasks.build_image.delay(self.user_id, **kwargs),
@@ -56,9 +66,12 @@ class DockerWebSocket(SecWebSocket):
         )
 
     def _images(self, **kwargs):
-        self.write_message(dict(
-            images=[i["RepoTags"][0] for i in CLIENT.images()],
-            method=kwargs["method"]))
+        user_images = self._get_user_images()
+
+        self.write_message(
+            dict(images=user_images,
+                 method=kwargs["method"])
+        )
 
     def _containers(self, **kwargs):
         self.write_message(dict(
@@ -95,8 +108,8 @@ class DockerWebSocket(SecWebSocket):
                     dict(message="You need to specify a tag for the image!",
                          method="error"))
             elif tasks.UserImage.objects.filter(
-                    tag=data["tag_image"] if ':' in data["tag_image"] else
-                    data["tag_image"] + ":latest"):
+                    tag=data["tag_image"] if ':' in data["tag_image"]
+                    else data["tag_image"] + ":latest"):
                 self.write_message(
                     dict(message="This tag already exists. Choose another!",
                          method="error"))
