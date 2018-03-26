@@ -35,7 +35,7 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
   * Python 3.6 ```https://www.python.org/downloads/```
 
 * and run script:
-  * Fill the file tornado_celery.conf where uses '...' with data from the database and data from home directory.
+  * Fill fill.sh of your data.
   * ```./start.sh```
 
 ### Create image
