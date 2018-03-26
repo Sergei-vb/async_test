@@ -89,10 +89,19 @@ class DockerWebSocket(SecWebSocket):
         general = dict(url_address=self._url_address, images=self._images,
                        containers=self._containers, create=self._create,
                        start=self._start, stop=self._stop, remove=self._remove)
-        if data["method"] == "url_address" and not data["tag_image"]:
-            self.write_message(
-                dict(message="You need to specify a tag for the image!",
-                     method="error"))
+        if data["method"] == "url_address":
+            if not data["tag_image"]:
+                self.write_message(
+                    dict(message="You need to specify a tag for the image!",
+                         method="error"))
+            elif tasks.UserImage.objects.filter(
+                    tag=data["tag_image"] if ':' in data["tag_image"] else
+                    data["tag_image"] + ":latest"):
+                self.write_message(
+                    dict(message="This tag already exists. Choose another!",
+                         method="error"))
+            else:
+                general[data["method"]](**data)
         elif data["method"] in general.keys():
             general[data["method"]](**data)
         else:

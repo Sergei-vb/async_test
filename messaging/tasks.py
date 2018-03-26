@@ -48,6 +48,7 @@ def build_image(user_id, **kwargs):
     user_image = UserImage(
         user_id=user_id,
         image_id=image_id,
+        tag=tag_image,
         created=created,
         size=size)
     user_image.save()
