@@ -23,7 +23,6 @@ def build_image(user_id, **kwargs):
     lines = []
 
     tag_image = kwargs["tag_image"].lower()
-    tag_image = user_id + "/" + (tag_image if ':' in tag_image else tag_image + ":latest")
 
     build_log.write("tag_image: {}".format(tag_image))
 
