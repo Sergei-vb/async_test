@@ -23,8 +23,9 @@ def build_image(user_id, **kwargs):
     lines = []
 
     tag_image = kwargs["tag_image"].lower()
-
-    build_log.write("tag_image: {}".format(tag_image))
+    # docker.errors.APIError: 500 Server Error:
+    # Internal Server Error ("invalid reference format:
+    # repository name must be lowercase")
 
     for line in CLIENT.build(path=url, rm=True, tag=tag_image):
         line_str = list(json.loads(line).values())[0]
