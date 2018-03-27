@@ -2,6 +2,7 @@
 """The module that performs Back-end logic."""
 import json
 import logging
+import re
 import os
 
 import docker
@@ -103,15 +104,25 @@ class DockerWebSocket(SecWebSocket):
                        containers=self._containers, create=self._create,
                        start=self._start, stop=self._stop, remove=self._remove)
         if data["method"] == "url_address":
+            reg = re.compile(r'\d+/[\w_]{1,1}[\w.-]{0,127}[:][\w.]+', re.ASCII)
             if not data["tag_image"]:
                 self.write_message(
                     dict(message="You need to specify a tag for the image!",
                          method="error"))
-            elif tasks.UserImage.objects.filter(
-                    tag=data["tag_image"] if ':' in data["tag_image"]
-                    else data["tag_image"] + ":latest"):
+            elif tasks.UserImage.objects.filter(tag=data["tag_image"]):
                 self.write_message(
                     dict(message="This tag already exists. Choose another!",
+                         method="error"))
+            elif reg.findall(data["tag_image"]) != data["tag_image"]:
+                # Rules for creating an image tag:
+                # https://docs.docker.com/engine/reference/commandline/tag/
+                self.write_message(
+                    dict(message="A tag name must be valid ASCII and may "
+                                 "contain lowercase and uppercase letters, "
+                                 "digits, underscores, periods and dashes. "
+                                 "A tag name may not start with a period or "
+                                 "a dash and may contain a maximum of "
+                                 "128 characters.",
                          method="error"))
             else:
                 general[data["method"]](**data)
