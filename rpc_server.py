@@ -113,7 +113,8 @@ class DockerWebSocket(SecWebSocket):
                 self.write_message(
                     dict(message="This tag already exists. Choose another!",
                          method="error"))
-            elif reg.findall(data["tag_image"]) != data["tag_image"]:
+            elif not reg.findall(data["tag_image"]) or \
+                    reg.findall(data["tag_image"])[0] != data["tag_image"]:
                 # Rules for creating an image tag:
                 # https://docs.docker.com/engine/reference/commandline/tag/
                 self.write_message(
