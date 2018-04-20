@@ -1,14 +1,22 @@
-from tornado import httpserver, gen, websocket, ioloop
+from tornado import httpserver, gen, websocket, ioloop, web
 from tornado.testing import AsyncTestCase, AsyncHTTPTestCase
 from tornado.testing import gen_test, bind_unused_port
-from rpc_server import make_app, TasksManager
 from tornado.escape import json_decode, json_encode
+
+from tests.sub_docker_websocket import SubDockerWebSocket
+
+
+def make_app():
+    """Routing."""
+    return web.Application([
+        (r"/load_from_docker/", SubDockerWebSocket),
+    ])
 
 
 class TestWebSocket(AsyncHTTPTestCase):
     def setUp(self):
         super().setUp()
-        self.container_name = "condescending_fermi"
+        self.container_name = "87541"
         self.user_id = "5"
         self.path = "/load_from_docker"
         self.request = self.path + "/?user_id={}".format(self.user_id)
@@ -69,7 +77,7 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertEqual('Client error', response["message"])
         # TODO: websocket connection message
 
-    """OK"""
+    """TODO"""
     @gen_test
     def test_images(self):
         message = {"method": "images", "elem": None}
@@ -144,6 +152,10 @@ class TestWebSocket(AsyncHTTPTestCase):
     """OK"""
     @gen_test
     def test_stop(self):
+        message = {"method": "start",
+                 "elem": self.container_name}
+        response = yield self._get_response(message)
+
         message = {"method": "stop",
                    "elem": self.container_name}
         response = yield self._get_response(message)
@@ -151,9 +163,9 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertEqual(response["method"], "stop")
         self.assertIsInstance(response["containers"], list)
 
-        container_name="/" + self.container_name
+        container_name = "/" + self.container_name
 
-        containers={i[0]: i[1] for i in response["containers"]}
+        containers = {i[0]: i[1] for i in response["containers"]}
         self.assertIn(container_name, containers.keys(),
                       "Container not found")
 
@@ -171,8 +183,8 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertEqual(response["method"], "remove")
         self.assertIsInstance(response["containers"], list)
 
-        container_name="/" + self.container_name
+        container_name = "/" + self.container_name
 
-        containers={i[0]: i[1] for i in response["containers"]}
+        containers = {i[0]: i[1] for i in response["containers"]}
         self.assertNotIn(container_name, containers.keys(),
                          "Container has found")
