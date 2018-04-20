@@ -8,7 +8,13 @@ import time
 class MockClientDockerAPI:
     def __init__(self):
         self.images_list = []
-        self.containers_list = []
+        self.containers_list = [{'Image': "alpine:3.7",
+                                 'Command': "/bin/sleep 999",
+                                 'Labels': {'out': ''},
+                                 'State': 'created',
+                                 'Created': 1524205394,
+                                 'Status': 'Created',
+                                 'Names': ["/87541"], }]
 
     def images(self, _name=None, quiet=False, _all=False, _filters=None):
         res = self.images_list
@@ -47,31 +53,41 @@ class MockClientDockerAPI:
         name = "/{0}".format(random.randint(1000, 100000))
 
         container = {'Image': image, 'Command': command, 'Labels': labels_dict,
-                     'State': 'created', 'Created': time_create,
+                     'State': 'created', 'Created': int(time_create),
                      'Status': 'Created', 'Names': [name], }
 
         self.containers_list.append(container)
 
     def start(self, container):
+        container = "/" + container
+        state = ["created", "exited"]
         for i in self.containers_list:
-            if container in i["Names"]:
+            if container in i["Names"] and i["State"] in state:
                 i["State"] = "running"
                 i["Status"] = "Up"
 
     def stop(self, container, timeout=None):
+        container = "/" + container
+        timeout = 10 if timeout is None else timeout
         for i in self.containers_list:
-            if container in i["Names"]:
+            if container in i["Names"] and i["State"] == "running":
                 time.sleep(timeout)
                 i["State"] = "exited"
                 i["Status"] = "Exited"
 
-    def remove_container(self, container, _v=False, _link=False, _force=False):
+    def remove_container(self, container, _v=False, _link=False, force=False):
+        container = "/" + container
         dict_for_remove = None
+        state = ["created", "exited"]
         for i in self.containers_list:
-            if container in i["Names"]:
+            if container in i["Names"] and force:
                 dict_for_remove = i
                 break
-        self.containers_list.remove(dict_for_remove)
+            elif container in i["Names"] and i["State"] in state:
+                dict_for_remove = i
+                break
+        if dict_for_remove:
+            self.containers_list.remove(dict_for_remove)
 
     # def build(self, path=None, tag=None, _quiet=False, _fileobj=None,
     #           _nocache=False, rm=False, _timeout=None,
