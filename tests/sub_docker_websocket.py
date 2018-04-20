@@ -55,22 +55,19 @@ class SubDockerWebSocket(DockerWebSocket):
     def _create(self, **kwargs):
         CLIENT.create_container(image=kwargs["elem"], command='/bin/sleep 999',
                                 labels=["out"])
-        # self._containers(**kwargs)
+        self._containers(**kwargs)
 
     def _start(self, **kwargs):
-        # CLIENT.start(container=kwargs["elem"])
-        # self._containers(**kwargs)
-        pass
+        CLIENT.start(container=kwargs["elem"])
+        self._containers(**kwargs)
 
     def _stop(self, **kwargs):
-        # CLIENT.stop(container=kwargs["elem"], timeout=0)
-        # self._containers(**kwargs)
-        pass
+        CLIENT.stop(container=kwargs["elem"], timeout=0)
+        self._containers(**kwargs)
 
     def _remove(self, **kwargs):
-        # CLIENT.remove_container(container=kwargs["elem"])
-        # self._containers(**kwargs)
-        pass
+        CLIENT.remove_container(container=kwargs["elem"])
+        self._containers(**kwargs)
 
     def on_message(self, message):
         data = json.loads(message)

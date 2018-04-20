@@ -2,6 +2,7 @@
 
 import datetime
 import random
+import time
 
 
 class MockClientDockerAPI:
@@ -41,7 +42,7 @@ class MockClientDockerAPI:
                          _healthcheck=None, _stop_timeout=None, _runtime=None):
 
         dt_now = datetime.datetime.now()
-        time_create = (dt_now-datetime.datetime(1970, 1, 1)).total_seconds()
+        time_create = (dt_now - datetime.datetime(1970, 1, 1)).total_seconds()
         labels_dict = {i: "" for i in labels}
         name = "/{0}".format(random.randint(1000, 100000))
 
@@ -51,15 +52,27 @@ class MockClientDockerAPI:
 
         self.containers_list.append(container)
 
-    # def start(self, container, *args, **kwargs):
-    #     pass
-    #
-    # def stop(self, container, timeout=None):
-    #     pass
-    #
-    # def remove_container(self, container, _v=False, _link=False, _force=False):
-    #     pass
-    #
+    def start(self, container):
+        for i in self.containers_list:
+            if container in i["Names"]:
+                i["State"] = "running"
+                i["Status"] = "Up"
+
+    def stop(self, container, timeout=None):
+        for i in self.containers_list:
+            if container in i["Names"]:
+                time.sleep(timeout)
+                i["State"] = "exited"
+                i["Status"] = "Exited"
+
+    def remove_container(self, container, _v=False, _link=False, _force=False):
+        dict_for_remove = None
+        for i in self.containers_list:
+            if container in i["Names"]:
+                dict_for_remove = i
+                break
+        self.containers_list.remove(dict_for_remove)
+
     # def build(self, path=None, tag=None, _quiet=False, _fileobj=None,
     #           _nocache=False, rm=False, _timeout=None,
     #           _custom_context=False, _encoding=None, _pull=False,
