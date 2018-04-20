@@ -1,6 +1,6 @@
-from tornado import httpserver, gen, websocket, ioloop, web
-from tornado.testing import AsyncTestCase, AsyncHTTPTestCase
-from tornado.testing import gen_test, bind_unused_port
+from tornado import gen, websocket, web
+from tornado.testing import AsyncHTTPTestCase
+from tornado.testing import gen_test
 from tornado.escape import json_decode, json_encode
 
 from tests.sub_docker_websocket import SubDockerWebSocket
@@ -14,6 +14,7 @@ def make_app():
 
 
 class TestWebSocket(AsyncHTTPTestCase):
+    """RPC procedures test."""
     def setUp(self):
         super().setUp()
         self.container_name = "87541"
@@ -38,12 +39,12 @@ class TestWebSocket(AsyncHTTPTestCase):
 
     @gen.coroutine
     def _get_response(self, message):
-        c = yield self._ws_connect()
+        connection = yield self._ws_connect()
 
-        c.write_message(
+        connection.write_message(
             json_encode(message)
         )
-        response = yield c.read_message()
+        response = yield connection.read_message()
 
         return json_decode(response)
 
@@ -51,7 +52,7 @@ class TestWebSocket(AsyncHTTPTestCase):
 # Tests
 #
 
-    """General tests. """
+    # General tests. #
 
     def test_root(self):
         response = self.fetch('/')
@@ -66,9 +67,9 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertEqual(response.code, 400)
         self.assertEqual(response.body, b'Can "Upgrade" only to "WebSocket".')
 
-    """RPC procedures tests. """
+    # RPC procedures tests. #
 
-    """ --- needs improvement --- """
+    # --- needs improvement --- #
     @gen_test
     def test_websocket_connection(self):
         message = {"method": None, "elem": None}
@@ -77,7 +78,7 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertEqual('Client error', response["message"])
         # TODO: websocket connection message
 
-    """TODO"""
+    # TODO
     @gen_test
     def test_images(self):
         message = {"method": "images", "elem": None}
@@ -91,7 +92,7 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertIn(self.tag_image, images)
 
-    """TODO"""
+    # TODO
     @gen_test
     def test_url_address(self):
         message = {"method": "url_address",
@@ -99,7 +100,7 @@ class TestWebSocket(AsyncHTTPTestCase):
                    "tag_image": self.tag_image}
         response = yield self._get_response(message)
 
-    """OK"""
+    # TODO
     @gen_test
     def test_containers(self):
         message = {"method": "containers"}
@@ -116,7 +117,7 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertIn(container_name, containers.keys(),
                       "Container not found")
 
-    """TODO"""
+    # TODO
     @gen_test
     def test_create(self):
         message = {"method": "create",
@@ -128,7 +129,7 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertIsInstance(response["containers"], list)
         # TODO: check existed tag
 
-    """OK"""
+    # OK
     @gen_test
     def test_start(self):
         message = {"method": "start",
@@ -149,16 +150,17 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertEqual(find_up_status, 0, "Container is not running")
 
-    """OK"""
+    # OK
     @gen_test
     def test_stop(self):
         message = {"method": "start",
-                 "elem": self.container_name}
+                   "elem": self.container_name}
         response = yield self._get_response(message)
 
         message = {"method": "stop",
                    "elem": self.container_name}
         response = yield self._get_response(message)
+
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "stop")
         self.assertIsInstance(response["containers"], list)
@@ -173,7 +175,7 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertEqual(find_stop_status, 0, "Container has not stopped")
 
-    """OK"""
+    # OK
     @gen_test
     def test_remove(self):
         message = {"method": "remove",
