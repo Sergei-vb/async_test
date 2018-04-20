@@ -5,23 +5,25 @@ import re
 
 from rpc_server import DockerWebSocket
 from tests.mock_docker import MockClientDockerAPI
+from tests.mock_django_orm import UserImage
 
 CLIENT = MockClientDockerAPI()
 
 
 class SubDockerWebSocket(DockerWebSocket):
+    """The class creates a basic WebSocket handler."""
+
     build_lines_count = 0
 
-    # def _get_user_images(self):
-    #     db_images = tasks.UserImage.objects.filter(
-    #         user_id=self.user_id
-    #     ).values().exclude(tag='')
-    #     all_images = CLIENT.images(quiet=True)
-    #
-    #     return [{'tag': i['tag'],
-    #              'available': True if i['image_id'] in all_images else False}
-    #             for i in db_images]
-    # FOR NOW SKIP
+    def _get_user_images(self):
+        db_images = UserImage.objects.filter(
+            user_id=self.user_id
+        ).values().exclude(tag='')
+        all_images = CLIENT.images(quiet=True)
+
+        return [{'tag': i['tag'],
+                 'available': True if i['image_id'] in all_images else False}
+                for i in db_images]
 
     # def _url_address(self, **kwargs):
     #     APP.task_manager.register(
@@ -37,8 +39,7 @@ class SubDockerWebSocket(DockerWebSocket):
     # FOR NOW SKIP
 
     def _images(self, **kwargs):
-        # user_images = self._get_user_images() FOR NOW SKIP
-        user_images = CLIENT.images(quiet=True)
+        user_images = self._get_user_images()
 
         self.write_message(
             dict(images=user_images,
@@ -81,11 +82,10 @@ class SubDockerWebSocket(DockerWebSocket):
                     dict(message="You need to specify a tag for the image!",
                          method="error"))
 
-            # elif tasks.UserImage.objects.filter(tag=data["tag_image"]):
-            #     self.write_message(
-            #         dict(message="This tag already exists. Choose another!",
-            #              method="error"))
-            # FOR NOW SKIP
+            elif UserImage.objects.filter(tag=data["tag_image"]):
+                self.write_message(
+                    dict(message="This tag already exists. Choose another!",
+                         method="error"))
 
             elif not reg.findall(data["tag_image"]) or \
                     reg.findall(data["tag_image"])[0] != data["tag_image"]:
