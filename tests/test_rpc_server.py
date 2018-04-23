@@ -1,3 +1,5 @@
+import os
+
 from tornado import gen, websocket, web
 from tornado.testing import AsyncHTTPTestCase
 from tornado.testing import gen_test
@@ -76,7 +78,9 @@ class TestWebSocket(AsyncHTTPTestCase):
     # General tests. #
 
     def setUp(self):
+        os.putenv("TEST", True)
         super().setUp()
+
         self.user_id = "5"
         self.path = "/load_from_docker"
         self.request = self.path + "/?user_id={}".format(self.user_id)
