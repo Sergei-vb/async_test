@@ -88,14 +88,3 @@ class MockClientDockerAPI:
                 break
         if dict_for_remove:
             self.containers_list.remove(dict_for_remove)
-
-    # def build(self, path=None, tag=None, _quiet=False, _fileobj=None,
-    #           _nocache=False, rm=False, _timeout=None,
-    #           _custom_context=False, _encoding=None, _pull=False,
-    #           _forcerm=False, _dockerfile=None, _container_limits=None,
-    #           _decode=False, _buildargs=None, _gzip=False, _shmsize=None,
-    #           _labels=None, _cache_from=None, _target=None, _network_mode=None,
-    #           _squash=None, _extra_hosts=None, _platform=None):
-    #     pass
-    #
-    # FOR NOW SKIP
