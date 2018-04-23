@@ -5,18 +5,23 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.testing import gen_test
 from tornado.escape import json_decode, json_encode
 
-from tests.sub_docker_websocket import SubDockerWebSocket, CLIENT
+from tests.mock_docker import MockClientDockerAPI
+from tests.mock_django_orm import UserImage
 
-
-def make_app():
-    """Routing."""
-    return web.Application([
-        (r"/load_from_docker/", SubDockerWebSocket),
-    ])
+from rpc_server import DockerWebSocket, CLIENT, APP
 
 
 class TestWebSocket(AsyncHTTPTestCase):
     """RPC procedures test."""
+
+    # @staticmethod
+    # def make_app():
+    #     """Routing."""
+    #     print("3. make_app")
+    #     print(os.getenv("TEST"))
+    #     return web.Application([
+    #         (r"/load_from_docker/", DockerWebSocket),
+    #     ])
 
 #
 # Private methods
@@ -39,12 +44,30 @@ class TestWebSocket(AsyncHTTPTestCase):
         return json_decode(response)
 
     def images_init(self):
+        self.user_image = UserImage(
+            user_id=self.user_id,
+            tag=self.tag_image,
+            image_id='sha256:342fea22',
+            created=1524229897,
+            size=191623983
+        )
+        self.user_image.save()
+
         CLIENT.images_list.append(
-            {"tag": self.tag_image, "available": True}
+            {'Containers': -1,
+             'Created': 1524229897,
+             'Id': 'sha256:342fea22',
+             'Labels': None,
+             'ParentId': 'sha256:55d98c2',
+             'RepoDigests': None,
+             'RepoTags': [self.tag_image],
+             'SharedSize': -1,
+             'Size': 191623983,
+             'VirtualSize': 191623983}
         )
 
     def containers_init(self):
-        containers_list = [{'Image': "alpine:3.7",
+        self.containers_list = [{'Image': "alpine:3.7",
                             'Command': "/bin/sleep 999",
                             'Labels': {'out': ''},
                             'State': 'created',
@@ -69,7 +92,7 @@ class TestWebSocket(AsyncHTTPTestCase):
                             'Names': ["/" + self.container_to_remove],
                             },
                            ]
-        CLIENT.containers_list.extend(containers_list)
+        CLIENT.containers_list.extend(self.containers_list)
 
 #
 # Tests
@@ -78,7 +101,6 @@ class TestWebSocket(AsyncHTTPTestCase):
     # General tests. #
 
     def setUp(self):
-        os.putenv("TEST", True)
         super().setUp()
 
         self.user_id = "5"
@@ -98,7 +120,10 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.containers_init()
 
     def get_app(self):
-        app = make_app()
+        print("2. GET_APP")
+        print(os.getenv("TEST"))
+
+        app = APP
         return app
 
     # HTTP tests
@@ -135,7 +160,7 @@ class TestWebSocket(AsyncHTTPTestCase):
         # response = yield self._get_response(message)
         pass
 
-    # TODO
+    # OK
     @gen_test
     def test_images(self):
         message = {"method": "images", "elem": None}
