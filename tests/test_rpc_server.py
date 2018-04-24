@@ -5,10 +5,9 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.testing import gen_test
 from tornado.escape import json_decode, json_encode
 
-from tests.mock_docker import MockClientDockerAPI
 from tests.mock_django_orm import UserImage
 
-from rpc_server import DockerWebSocket, CLIENT, APP
+from rpc_server import CLIENT, APP
 
 
 class TestWebSocket(AsyncHTTPTestCase):
@@ -154,11 +153,34 @@ class TestWebSocket(AsyncHTTPTestCase):
     # TODO
     @gen_test
     def test_url_address(self):
-        # message = {"method": "url_address",
-        #            "url_address": self.url_address,
-        #            "tag_image": self.tag_image}
-        # response = yield self._get_response(message)
-        pass
+        message = {"method": "url_address",
+                   "url_address": self.url_address,
+                   "tag_image": self.new_tag_image}
+        response = yield self._get_response(message)
+
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response["method"], "url_address")
+        self.assertEqual(response["output"], "Building image...")
+
+        self.assertIn("value_for_user_{0}".format(self.user_id),
+                      APP.task_manager.callbacks.keys())
+
+        print("CLIENT: ", [i for i in CLIENT.images()])
+        print("CLIENT images list: ", [i for i in CLIENT.images_list])
+
+        user_images = [i["tag"] for i in UserImage.objects.all()]
+        self.assertIn(self.new_tag_image, user_images)
+
+    # OK
+    @gen_test
+    def test_tag_image_duplicate(self):
+        message = {"method": "url_address",
+                   "url_address": self.url_address,
+                   "tag_image": self.tag_image}
+        response = yield self._get_response(message)
+
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response["method"], "error")
 
     # OK
     @gen_test
