@@ -72,31 +72,33 @@ class TestWebSocket(AsyncHTTPTestCase):
         in mock docker engine
         by default values. """
 
-        self.containers_list = [{'Image': "alpine:3.7",
-                                 'Command': "/bin/sleep 999",
-                                 'Labels': {'out': ''},
-                                 'State': 'created',
-                                 'Created': 1524205394,
-                                 'Status': 'Created',
-                                 'Names': ["/" + self.container_to_run],
-                                },
-                                {'Image': "alpine:3.7",
-                                 'Command': "/bin/sleep 999",
-                                 'Labels': {'out': ''},
-                                 'State': 'running',
-                                 'Created': 1524205394,
-                                 'Status': 'Up 15 minutes',
-                                 'Names': ["/" + self.container_running],
-                                },
-                                {'Image': "alpine:3.7",
-                                 'Command': "/bin/sleep 999",
-                                 'Labels': {'out': ''},
-                                 'State': 'created',
-                                 'Created': 1524205394,
-                                 'Status': 'Created',
-                                 'Names': ["/" + self.container_to_remove],
-                                },
-                               ]
+        def test_container(name, state, status):
+            """Creates test container. """
+            return {
+                'Image': "alpine:3.7",
+                'Command': "/bin/sleep 999",
+                'Labels': {'out': ''},
+                'State': state,
+                'Created': 1524205394,
+                'Status': status,
+                'Names': ["/" + name]
+            }
+
+        state_created = 'created'
+        state_running = 'running'
+
+        status_created = 'Created'
+        status_up = 'Up 15 minutes'
+
+        self.containers_list = [
+            test_container(self.container_to_run,
+                           state_created, status_created),
+            test_container(self.container_running,
+                           state_running, status_up),
+            test_container(self.container_to_remove,
+                           state_created, status_created),
+        ]
+
         CLIENT.containers_list.extend(self.containers_list)
 
     #
