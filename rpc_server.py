@@ -16,13 +16,6 @@ from at_websocket.websocket import SecWebSocket
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
-if os.getenv("TEST"):
-    from tests import mock_celery as tasks
-    from tests.mock_celery import MakeApp
-    from tests.mock_docker import MockClientDockerAPI
-    CLIENT = MockClientDockerAPI()
-    APP = MakeApp()
-
 
 class TasksManager:
     """A class that manages tasks callbacks."""
@@ -152,6 +145,14 @@ class DockerWebSocket(SecWebSocket):
                 )
             )
         self.build_lines_count = len(lines) - 1
+
+
+if os.getenv("TEST"):
+    import tests.mock_celery as tasks
+    from tests.mock_docker import MockClientDockerAPI
+    CLIENT = MockClientDockerAPI()
+    APP = make_app()
+    APP.task_manager = TasksManager()
 
 
 if __name__ == "__main__":
