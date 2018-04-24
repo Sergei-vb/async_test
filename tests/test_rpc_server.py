@@ -1,38 +1,36 @@
-import os
+#!/usr/bin/env python3
+"""Unit tests module. """
 
-from tornado import gen, websocket, web
+from tornado import gen, websocket
 from tornado.testing import AsyncHTTPTestCase
 from tornado.testing import gen_test
 from tornado.escape import json_decode, json_encode
 
-from tests.mock_django_orm import UserImage
-
 from rpc_server import CLIENT, APP
+
+from tests.mock_django_orm import UserImage
 
 
 class TestWebSocket(AsyncHTTPTestCase):
+    # pylint: disable=too-many-instance-attributes
+
     """RPC procedures test."""
 
-    # @staticmethod
-    # def make_app():
-    #     """Routing."""
-    #     print("3. make_app")
-    #     print(os.getenv("TEST"))
-    #     return web.Application([
-    #         (r"/load_from_docker/", DockerWebSocket),
-    #     ])
-
-#
-# Private methods
-#
+    #
+    # Private methods
+    #
 
     def _ws_connect(self):
+        """Establishes websocket connection on test port. """
+
         return websocket.websocket_connect(
             'ws://localhost:{}{}'.format(self.get_http_port(), self.request)
         )
 
     @gen.coroutine
     def _get_response(self, message):
+        """Sends message to server and get a response. """
+
         connection = yield self._ws_connect()
 
         connection.write_message(
@@ -43,6 +41,10 @@ class TestWebSocket(AsyncHTTPTestCase):
         return json_decode(response)
 
     def images_init(self):
+        """Initializes images list
+        in mock DB and mock docker engine
+        by default values. """
+
         self.user_image = UserImage(
             user_id=self.user_id,
             tag=self.tag_image,
@@ -66,40 +68,45 @@ class TestWebSocket(AsyncHTTPTestCase):
         )
 
     def containers_init(self):
+        """Initializes containers list
+        in mock docker engine
+        by default values. """
+
         self.containers_list = [{'Image': "alpine:3.7",
-                            'Command': "/bin/sleep 999",
-                            'Labels': {'out': ''},
-                            'State': 'created',
-                            'Created': 1524205394,
-                            'Status': 'Created',
-                            'Names': ["/" + self.container_to_run],
-                            },
-                           {'Image': "alpine:3.7",
-                            'Command': "/bin/sleep 999",
-                            'Labels': {'out': ''},
-                            'State': 'running',
-                            'Created': 1524205394,
-                            'Status': 'Up 15 minutes',
-                            'Names': ["/" + self.container_running],
-                            },
-                           {'Image': "alpine:3.7",
-                            'Command': "/bin/sleep 999",
-                            'Labels': {'out': ''},
-                            'State': 'created',
-                            'Created': 1524205394,
-                            'Status': 'Created',
-                            'Names': ["/" + self.container_to_remove],
-                            },
-                           ]
+                                 'Command': "/bin/sleep 999",
+                                 'Labels': {'out': ''},
+                                 'State': 'created',
+                                 'Created': 1524205394,
+                                 'Status': 'Created',
+                                 'Names': ["/" + self.container_to_run],
+                                },
+                                {'Image': "alpine:3.7",
+                                 'Command': "/bin/sleep 999",
+                                 'Labels': {'out': ''},
+                                 'State': 'running',
+                                 'Created': 1524205394,
+                                 'Status': 'Up 15 minutes',
+                                 'Names': ["/" + self.container_running],
+                                },
+                                {'Image': "alpine:3.7",
+                                 'Command': "/bin/sleep 999",
+                                 'Labels': {'out': ''},
+                                 'State': 'created',
+                                 'Created': 1524205394,
+                                 'Status': 'Created',
+                                 'Names': ["/" + self.container_to_remove],
+                                },
+                               ]
         CLIENT.containers_list.extend(self.containers_list)
 
-#
-# Tests
-#
+    #
+    # Tests
+    #
 
     # General tests. #
 
     def setUp(self):
+        """Initialize test environment. """
         super().setUp()
 
         self.user_id = "5"
@@ -119,8 +126,8 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.containers_init()
 
     def get_app(self):
-        print("2. GET_APP")
-        print(os.getenv("TEST"))
+        """Returns Tornado web application for using in tests.
+        This is a required part of AsyncHTTPTestCase initialization."""
 
         app = APP
         return app
@@ -128,31 +135,32 @@ class TestWebSocket(AsyncHTTPTestCase):
     # HTTP tests
 
     def test_root(self):
+        """This is very simple test, checking server response. """
         response = self.fetch('/')
         self.assertEqual(response.code, 404)
 
-    def test_no_user(self):
-        response = self.fetch(self.path)
-        self.assertEqual(response.code, 404)
-
     def test_http_connection(self):
+        """Checks websocket entrypoint. """
         response = self.fetch(self.request)
         self.assertEqual(response.code, 400)
         self.assertEqual(response.body, b'Can "Upgrade" only to "WebSocket".')
 
     # RPC procedures tests. #
 
-    # --- needs improvement: add websocket connection message --- #
+    # --- main code needs improvement: add websocket connection message --- #
     @gen_test
     def test_websocket_connection(self):
+        """Tests websocket connection. """
+
         message = {"method": None, "elem": None}
         response = yield self._get_response(message)
 
         self.assertEqual('Client error', response["message"])
 
-    # TODO
     @gen_test
     def test_url_address(self):
+        """Tests creating images. """
+
         message = {"method": "url_address",
                    "url_address": self.url_address,
                    "tag_image": self.new_tag_image}
@@ -165,15 +173,13 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertIn("value_for_user_{0}".format(self.user_id),
                       APP.task_manager.callbacks.keys())
 
-        print("CLIENT: ", [i for i in CLIENT.images()])
-        print("CLIENT images list: ", [i for i in CLIENT.images_list])
-
         user_images = [i["tag"] for i in UserImage.objects.all()]
         self.assertIn(self.new_tag_image, user_images)
 
-    # OK
     @gen_test
     def test_tag_image_duplicate(self):
+        """Tests case when sending existing image tag. """
+
         message = {"method": "url_address",
                    "url_address": self.url_address,
                    "tag_image": self.tag_image}
@@ -182,9 +188,10 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "error")
 
-    # OK
     @gen_test
     def test_images(self):
+        """Tests getting images list. """
+
         message = {"method": "images", "elem": None}
         response = yield self._get_response(message)
 
@@ -196,9 +203,10 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertIn(self.tag_image, images)
 
-    # OK
     @gen_test
     def test_containers(self):
+        """Tests getting containers list. """
+
         message = {"method": "containers"}
         response = yield self._get_response(message)
 
@@ -213,9 +221,10 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertIn(container_name, containers.keys(),
                       "Container not found")
 
-    # OK
     @gen_test
     def test_create(self):
+        """Tests creating a container. """
+
         cont_num = len(CLIENT.containers_list)
 
         message = {"method": "create",
@@ -225,11 +234,12 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "create")
         self.assertIsInstance(response["containers"], list)
-        self.assertEqual(len(response["containers"]), cont_num+1)
+        self.assertEqual(len(response["containers"]), cont_num + 1)
 
-    # OK
     @gen_test
     def test_start(self):
+        """Tests starting the container. """
+
         message = {"method": "start",
                    "elem": self.container_to_run}
         response = yield self._get_response(message)
@@ -248,13 +258,9 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertEqual(find_up_status, 0, "Container is not running")
 
-    # OK
     @gen_test
     def test_stop(self):
-        # First, start a container:
-        # message = {"method": "start",
-        #            "elem": self.container_running}
-        # response = yield self._get_response(message)
+        """Tests stopping the container. """
 
         message = {"method": "stop",
                    "elem": self.container_running}
@@ -274,9 +280,10 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertEqual(find_stop_status, 0, "Container has not stopped")
 
-    # OK
     @gen_test
     def test_remove(self):
+        """Tests removing the container. """
+
         message = {"method": "remove",
                    "elem": self.container_to_remove}
         response = yield self._get_response(message)
