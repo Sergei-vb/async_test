@@ -51,7 +51,8 @@ class Objects:
             for obj in Database.collect:
                 if obj[key] == val:
                     answer.append(obj)
-        return answer
+
+        return answer if answer.collect else None
 
 
 # pylint: disable=too-few-public-methods

@@ -27,7 +27,18 @@ class Build:
         user_image = UserImage(**data_format)
         user_image.save()
 
-        MockClientDockerAPI.images_list.append(data_format)
+        MockClientDockerAPI.images_list.append(
+            {'Containers': -1,
+             'Created': 1,
+             'Id': image_id,
+             'Labels': None,
+             'ParentId': 'sha256:55d98c2',
+             'RepoDigests': None,
+             'RepoTags': [tag_image],
+             'SharedSize': -1,
+             'Size': 191623983,
+             'VirtualSize': 191623983}
+        )
 
         return "value_for_user_{0}".format(user_id)
 
