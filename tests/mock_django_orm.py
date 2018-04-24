@@ -6,6 +6,9 @@ class QuerySet:
         self.collect = []
         self.data = data
 
+    def __iter__(self):
+        return iter(self.collect)
+
     def __repr__(self):
         if self.data is None:
             return "<QuerySet [<UserImage: UserImage>]>"
