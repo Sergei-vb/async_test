@@ -132,15 +132,20 @@ class TestWebSocket(AsyncHTTPTestCase):
         app = APP
         return app
 
+    def tearDown(self):
+        CLIENT.containers_list.clear()
+
     # HTTP tests
 
     def test_root(self):
         """This is very simple test, checking server response. """
+        self.skipTest("")
         response = self.fetch('/')
         self.assertEqual(response.code, 404)
 
     def test_http_connection(self):
         """Checks websocket entrypoint. """
+        self.skipTest("")
         response = self.fetch(self.request)
         self.assertEqual(response.code, 400)
         self.assertEqual(response.body, b'Can "Upgrade" only to "WebSocket".')
@@ -175,6 +180,9 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         user_images = [i["tag"] for i in UserImage.objects.all()]
         self.assertIn(self.new_tag_image, user_images)
+
+        docker_images = [i["RepoTags"][0] for i in CLIENT.images_list]
+        self.assertIn(self.new_tag_image, docker_images)
 
     @gen_test
     def test_tag_image_duplicate(self):
