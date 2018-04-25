@@ -151,14 +151,12 @@ class DockerWebSocket(SecWebSocket):
         """Translate the output results of building docker images
         to the client."""
 
-        for line_n in range(self.build_lines_count, len(lines) - 1):
-            self.write_message(
-                dict(
-                    output=lines[line_n],
-                    method=method
-                )
-            )
-        self.build_lines_count = len(lines) - 1
+        for line in lines[self.build_lines_count:]:
+            self.write_message({
+                "output": line,
+                "method": method,
+            })
+        self.build_lines_count = len(lines)
 
 
 if os.getenv("TEST"):
