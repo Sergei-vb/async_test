@@ -103,35 +103,49 @@ class DockerWebSocket(SecWebSocket):
         general = dict(url_address=self._url_address, images=self._images,
                        containers=self._containers, create=self._create,
                        start=self._start, stop=self._stop, remove=self._remove)
+
         if data["method"] == "url_address":
-            reg = re.compile(r'\d+/[\w_]{1,1}[\w.-]{0,127}[:][\w.]+', re.ASCII)
-            if not data["tag_image"]:
-                self.write_message(
-                    dict(message="You need to specify a tag for the image!",
-                         method="error"))
-            elif tasks.UserImage.objects.filter(tag=data["tag_image"]):
-                self.write_message(
-                    dict(message="This tag already exists. Choose another!",
-                         method="error"))
-            elif not reg.findall(data["tag_image"]) or \
-                    reg.findall(data["tag_image"])[0] != data["tag_image"]:
-                # Rules for creating an image tag:
-                # https://docs.docker.com/engine/reference/commandline/tag/
-                self.write_message(
-                    dict(message="A tag name must be valid ASCII and may "
-                                 "contain lowercase and uppercase letters, "
-                                 "digits, underscores, periods and dashes. "
-                                 "A tag name may not start with a period or "
-                                 "a dash and may contain a maximum of "
-                                 "128 characters.",
-                         method="error"))
-            else:
+            ready = self.check_ready_for_build(**data)
+            if ready:
                 general[data["method"]](**data)
+
         elif data["method"] in general.keys():
             general[data["method"]](**data)
+
         else:
             self.write_message(
                 dict(message="Client error", method=data["method"]))
+
+    def check_ready_for_build(self, **kwargs):
+        """
+        Checks compliance with all conditions for build
+        and then returns answer about ready.
+        """
+        reg = re.compile(r'\d+/[\w_]{1,1}[\w.-]{0,127}[:][\w.]+', re.ASCII)
+        if not kwargs["tag_image"]:
+            self.write_message(
+                dict(message="You need to specify a tag for the image!",
+                     method="error"))
+        elif tasks.UserImage.objects.filter(tag=kwargs["tag_image"]):
+            self.write_message(
+                dict(message="This tag already exists. Choose another!",
+                     method="error"))
+        elif not reg.findall(kwargs["tag_image"]) or \
+                reg.findall(kwargs["tag_image"])[0] != kwargs["tag_image"]:
+            # Rules for creating an image tag:
+            # https://docs.docker.com/engine/reference/commandline/tag/
+            self.write_message(
+                dict(message="A tag name must be valid ASCII and may "
+                             "contain lowercase and uppercase letters, "
+                             "digits, underscores, periods and dashes. "
+                             "A tag name may not start with a period or "
+                             "a dash and may contain a maximum of "
+                             "128 characters.",
+                     method="error"))
+        else:
+            return True
+
+        return False
 
     def callback(self, lines, method):
         """Translate the output results of building docker images
