@@ -42,7 +42,9 @@ def make_app():
 class DockerWebSocket(SecWebSocket):
     """The class creates a basic WebSocket handler."""
 
-    build_lines_count = 0
+    def __init__(self, application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.build_lines_count = 0
 
     def _get_user_images(self):
         db_images = tasks.UserImage.objects.filter(
