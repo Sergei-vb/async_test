@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-. ./fill.sh
+. fill.sh
 
 echo [supervisord]
 echo environment=PORT=$PORT,NAME=$NAME,USER=$USER,PASSWORD=$PASSWORD,HOST=$HOST,PORTDB=$PORTDB
