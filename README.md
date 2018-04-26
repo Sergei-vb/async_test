@@ -24,19 +24,24 @@
 ### Run project
 You need to go to the directory with the Dockerfile of the cloned repository, then:
 1. Create Image: ```docker build -t NAME_YOUR_IMAGE .```
-2. Enter the parameters of the docker-compose.yml:
+2. Enter image name and then parameters of connect to DB to the docker-compose.yml:
    * ```image: ```NAME_YOUR_IMAGE
+   * ```NAME: ```
+   * ```USER: ```
+   * ```PASSWORD: ```
+   * ```HOST: ```
+   * ```PORTDB: ```
 3. Run Container: ```docker-compose up```
 
 ### Run in virtualenv
 * You need setup:
-  * Supervisor: ```http://supervisord.org/installing.html```
-  * Virtualenv: ```https://virtualenv.pypa.io/en/stable/installation/```
-  * Python 3.6 ```https://www.python.org/downloads/```
+  * [Supervisor (use package manager)](http://supervisord.org/installing.html#installing-a-distribution-package "Supervisor")
+  * [Virtualenv](https://virtualenv.pypa.io/en/stable/installation/ "Virtualenv")
+  * [Python 3.6](https://www.python.org/downloads/ "Python3.6")
 
 * and run script:
   * Fill fill.sh of your data.
-  * ```./start.sh```
+  * ```./scripts/start.sh```
 
 ### Create image
 To create an image, you need a link to the github repository with a Dockerfile, like this: ```https://github.com/Sergeivb/coralline-rpc```
