@@ -5,8 +5,8 @@ import datetime
 from django_coralline_images.models import UserImage
 import docker
 
-from at_logging import build_log
 from messaging.app import APP
+from c_logging import APP_LOG
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
@@ -37,16 +37,16 @@ def save_to_database(user_id, tag_image):
 def build_image(user_id, **kwargs):
     """Builds docker image with specified parameters."""
 
-    build_log.write('Started building an image...')
-    build_log.write("USER_ID: {}".format(user_id))
-
-    url = "{}.git".format(kwargs["url_address"])
-    lines = []
-
     tag_image = kwargs["tag_image"].lower()
     # docker.errors.APIError: 500 Server Error:
     # Internal Server Error ("invalid reference format:
     # repository name must be lowercase")
+
+    APP_LOG.info('Started building an image, tag: %s', tag_image)
+    APP_LOG.debug("USER_ID: %s", user_id)
+
+    url = "{}.git".format(kwargs["url_address"])
+    lines = []
 
     for line in CLIENT.build(path=url, rm=True, tag=tag_image):
         line_str = list(json.loads(line).values())[0]
@@ -57,6 +57,8 @@ def build_image(user_id, **kwargs):
                                        'method': kwargs['method']}
                                 )
 
-        build_log.write(line_str)
+        APP_LOG.debug(line_str)
 
     save_to_database(user_id, tag_image)
+
+    APP_LOG.info('Image %s has built successfully.', tag_image)
