@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The module that performs Back-end logic."""
+"""Back-end logic. """
 import json
 import logging
 import re
@@ -16,15 +16,15 @@ from c_rpc_base import CLIENT
 
 
 class TasksManager:
-    """A class that manages tasks callbacks."""
+    """Tasks managing. """
     callbacks = dict()
 
     def register(self, task, callback):
-        """Adds new pair 'task-callback' to the callbacks poll."""
+        """Adds new pair 'task-callback' to the callbacks poll. """
         self.callbacks[task] = callback
 
     def notify_callbacks(self):
-        """Rises callbacks in poll."""
+        """Rises callbacks in poll. """
         for task, callback in self.callbacks.items():
             if task.state == 'PROGRESS':
                 callback(task.info['line'], task.info['method'])
@@ -38,7 +38,7 @@ def make_app():
 
 
 class DockerWebSocket(SecWebSocket):
-    """The class creates a basic WebSocket handler."""
+    """WebSocket handler, implementing Docker RPC. """
 
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
@@ -166,7 +166,7 @@ class DockerWebSocket(SecWebSocket):
 
     def callback(self, lines, method):
         """Translate the output results of building docker images
-        to the client."""
+        to the client. """
 
         for line in lines[self.build_lines_count:]:
             self.write_message({
