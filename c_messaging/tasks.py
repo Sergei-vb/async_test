@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Tasks description module."""
+"""Tasks description module. """
 import json
 import datetime
 from django_coralline_images.models import UserImage
 
 from c_messaging.app import APP
 from c_logging import APP_LOG
+
 from c_rpc_base import CLIENT
 
 
-def save_to_database(user_id, tag_image):
+def _save_to_database(user_id, tag_image):
     """Saves user image to database. """
 
     def tag_in_repotags(image):
@@ -33,7 +34,7 @@ def save_to_database(user_id, tag_image):
 
 @APP.task
 def build_image(user_id, **kwargs):
-    """Builds docker image with specified parameters."""
+    """Builds docker image with specified parameters. """
 
     tag_image = kwargs["tag_image"].lower()
     # docker.errors.APIError: 500 Server Error:
@@ -45,18 +46,29 @@ def build_image(user_id, **kwargs):
 
     url = "{}.git".format(kwargs["url_address"])
     lines = []
+    error_messages = []
 
     for line in CLIENT.build(path=url, rm=True, tag=tag_image):
-        line_str = list(json.loads(line).values())[0]
-        lines.append(line_str)
+        build_line = json.loads(line)
+
+        if 'error' in build_line.keys():
+            error_messages.append(build_line['error'])
+            lines.append(build_line['error'])
+            APP_LOG.fatal(build_line['error'])
+        else:
+            line_str = list(build_line.values())[0]
+            lines.append(line_str)
+            APP_LOG.debug(line_str)
 
         build_image.update_state(state='PROGRESS',
                                  meta={'line': lines,
-                                       'method': kwargs['method']}
-                                )
+                                       'method': kwargs['method']})
 
-        APP_LOG.debug(line_str)
+    if not error_messages:
+        _save_to_database(user_id, tag_image)
 
-    save_to_database(user_id, tag_image)
-
-    APP_LOG.info('Image %s has built successfully.', tag_image)
+        APP_LOG.info('Image %s has built successfully.', tag_image)
+    else:
+        APP_LOG.fatal('Error building image %s! Error message: "%s"',
+                      tag_image,
+                      error_messages)
