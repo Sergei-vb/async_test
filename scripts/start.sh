@@ -7,7 +7,7 @@ pip install -r requirements.txt
 cd scripts/
 touch ./tornado_celery.conf
 ./script_fill.sh >> ./tornado_celery.conf
-sudo cp ./tornado_celery.conf /etc/supervisor/conf.d/
+sudo mv ./tornado_celery.conf /etc/supervisor/conf.d/
 
 # patching
 cd ../
