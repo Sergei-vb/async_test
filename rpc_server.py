@@ -5,16 +5,14 @@ import logging
 import re
 import os
 
-import docker
 import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
 
 from c_messaging import tasks
-from c_websocket.websocket import SecWebSocket
-
-CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
+from c_rpc_base.websocket import SecWebSocket
+from c_rpc_base import CLIENT
 
 
 class TasksManager:
