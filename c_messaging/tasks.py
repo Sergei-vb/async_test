@@ -3,13 +3,11 @@
 import json
 import datetime
 from django_coralline_images.models import UserImage
-import docker
 
 from c_messaging.app import APP
 from c_logging import APP_LOG
 
-
-CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
+from c_rpc_base import CLIENT
 
 
 def _save_to_database(user_id, tag_image):
