@@ -19,7 +19,7 @@ echo priority=997
 echo
 echo
 echo [program:tornado_celery]
-echo command=$PATH_BY_PROJ/venv/bin/celery --app=messaging.app:APP worker --loglevel=INFO -E
+echo command=$PATH_BY_PROJ/venv/bin/celery --app=c_messaging.app:APP worker --loglevel=INFO -E
 echo directory=$PATH_BY_PROJ
 echo user=$USERSYS
 echo numprocs=1

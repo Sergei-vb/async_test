@@ -5,7 +5,7 @@ import datetime
 from django_coralline_images.models import UserImage
 import docker
 
-from messaging.app import APP
+from c_messaging.app import APP
 from c_logging import APP_LOG
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')

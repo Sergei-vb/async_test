@@ -11,7 +11,7 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 
-from messaging import tasks
+from c_messaging import tasks
 from c_websocket.websocket import SecWebSocket
 
 CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
