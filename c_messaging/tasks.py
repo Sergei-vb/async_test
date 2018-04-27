@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tasks description module."""
+"""Tasks description module. """
 import json
 import datetime
 from django_coralline_images.models import UserImage
@@ -33,7 +33,7 @@ def _save_to_database(user_id, tag_image):
 
 @APP.task
 def build_image(user_id, **kwargs):
-    """Builds docker image with specified parameters."""
+    """Builds docker image with specified parameters. """
 
     tag_image = kwargs["tag_image"].lower()
     # docker.errors.APIError: 500 Server Error:
