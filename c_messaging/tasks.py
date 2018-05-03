@@ -46,7 +46,7 @@ def build_image(user_id, **kwargs):
     error_messages = []
 
     for line in CLIENT.build(path=url, rm=True, tag=tag_image):
-        build_line = json.loads(line)
+        build_line = json.loads(line.decode())
 
         if 'error' in build_line.keys():
             error_messages.append(build_line['error'])
