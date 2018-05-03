@@ -22,12 +22,13 @@ def _save_to_database(user_id, tag_image):
     created = datetime.datetime.fromtimestamp(image_item["Created"])
     size = image_item["Size"]
 
-    user_image = UserImage(user_id=user_id,
-                           image_id=image_id,
-                           tag=tag_image,
-                           created=created,
-                           size=size
-                          )
+    user_image = UserImage(
+        user_id=user_id,
+        image_id=image_id,
+        tag=tag_image,
+        created=created,
+        size=size
+    )
     user_image.save()
 
 
@@ -35,10 +36,7 @@ def _save_to_database(user_id, tag_image):
 def build_image(user_id, **kwargs):
     """Builds docker image with specified parameters. """
 
-    tag_image = kwargs["tag_image"].lower()
-    # docker.errors.APIError: 500 Server Error:
-    # Internal Server Error ("invalid reference format:
-    # repository name must be lowercase")
+    tag_image = kwargs["tag_image"]
 
     APP_LOG.info('Started building an image, tag: %s', tag_image)
     APP_LOG.debug("USER_ID: %s", user_id)

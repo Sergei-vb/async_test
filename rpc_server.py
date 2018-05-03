@@ -131,7 +131,12 @@ class DockerWebSocket(SecWebSocket):
         Checks compliance with all conditions for build
         and then returns answer about ready.
         """
-        reg = re.compile(r'\d+/[\w_]{1,1}[\w.-]{0,127}[:][\w.]+', re.ASCII)
+        reg = re.compile(
+            (r"\d+/[a-z\d]"
+             r"((?:([a-z\d-])|([.])(?!\3)|([_])(?![_]{2,})){,242}[a-z\d])?"
+             r":[\w][\w.-]{,127}"),
+            re.ASCII
+        )
         if not kwargs["tag_image"]:
             self.write_message({
                 "message": "You need to specify a tag for the image!",
@@ -144,18 +149,22 @@ class DockerWebSocket(SecWebSocket):
                 "method": "error"
             })
 
-        elif not reg.findall(kwargs["tag_image"]) or \
-                reg.findall(kwargs["tag_image"])[0] != kwargs["tag_image"]:
+        elif not reg.match(kwargs["tag_image"]):
 
             # Rules for creating an image tag:
             # https://docs.docker.com/engine/reference/commandline/tag/
             self.write_message({
-                "message": "A tag name must be valid ASCII and may "
-                           "contain lowercase and uppercase letters, "
-                           "digits, underscores, periods and dashes. "
-                           "A tag name may not start with a period or "
-                           "a dash and may contain a maximum of "
-                           "128 characters.",
+                "message": ("Name components may contain lowercase letters, "
+                            "digits and separators. A separator is defined "
+                            "as a period, one or two underscores, or one or "
+                            "more dashes. A name component may not start "
+                            "or end with a separator.\n"
+                            "A tag name must be valid ASCII and may "
+                            "contain lowercase and uppercase letters, "
+                            "digits, underscores, periods and dashes. "
+                            "A tag name may not start with a period or "
+                            "a dash and may contain a maximum of "
+                            "128 characters."),
                 "method": "error"
             })
 
