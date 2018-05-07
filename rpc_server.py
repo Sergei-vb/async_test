@@ -54,13 +54,14 @@ class DockerWebSocket(SecWebSocket):
                  'available': True if i['image_id'] in all_images else False}
                 for i in db_images]
 
-    def _url_address(self, **kwargs):
+    def _build_image(self, **kwargs):
         APP.task_manager.register(
             tasks.build_image.delay(self.user_id, **kwargs),
             self.callback)
 
         self.write_message({
-            "output": "Building image...",
+            "result": "Building image...",
+            "error": None,
             "method": kwargs["method"]
         })
 
@@ -68,7 +69,8 @@ class DockerWebSocket(SecWebSocket):
         user_images = self._get_user_images()
 
         self.write_message({
-            "images": user_images,
+            "result": user_images,
+            "error": None,
             "method": kwargs["method"]
         })
 
@@ -79,31 +81,32 @@ class DockerWebSocket(SecWebSocket):
             data_list.append((i["Names"][0], i["Status"]))
 
         self.write_message({
-            "containers": data_list,
+            "result": data_list,
+            "error": None,
             "method": kwargs["method"]
         })
 
     def _create(self, **kwargs):
-        CLIENT.create_container(image=kwargs["elem"], labels=["out"])
+        CLIENT.create_container(image=kwargs["params"]["elem"], labels=["out"])
         self._containers(**kwargs)
 
     def _start(self, **kwargs):
-        CLIENT.start(container=kwargs["elem"])
+        CLIENT.start(container=kwargs["params"]["elem"])
         self._containers(**kwargs)
 
     def _stop(self, **kwargs):
-        CLIENT.stop(container=kwargs["elem"], timeout=0)
+        CLIENT.stop(container=kwargs["params"]["elem"], timeout=0)
         self._containers(**kwargs)
 
     def _remove(self, **kwargs):
-        CLIENT.remove_container(container=kwargs["elem"])
+        CLIENT.remove_container(container=kwargs["params"]["elem"])
         self._containers(**kwargs)
 
     def on_message(self, message):
         data = json.loads(message)
 
         general = {
-            "url_address": self._url_address,
+            "build_image": self._build_image,
             "images": self._images,
             "containers": self._containers,
             "create": self._create,
@@ -112,7 +115,7 @@ class DockerWebSocket(SecWebSocket):
             "remove": self._remove
         }
 
-        if data["method"] == "url_address":
+        if data["method"] == "build_image":
             ready = self.check_ready_for_build(**data)
             if ready:
                 general[data["method"]](**data)
@@ -122,8 +125,9 @@ class DockerWebSocket(SecWebSocket):
 
         else:
             self.write_message({
-                "message": "Client error",
-                "method": data["method"]
+                "result": None,
+                "error": "Client error",
+                "method": "error"
             })
 
     def check_ready_for_build(self, **kwargs):
@@ -137,34 +141,37 @@ class DockerWebSocket(SecWebSocket):
              r":[\w][\w.-]{,127}"),
             re.ASCII
         )
-        if not kwargs["tag_image"]:
+        if not kwargs["params"]["tag_image"]:
             self.write_message({
-                "message": "You need to specify a tag for the image!",
+                "result": None,
+                "error": "You need to specify a tag for the image!",
                 "method": "error"
             })
 
-        elif tasks.UserImage.objects.filter(tag=kwargs["tag_image"]):
+        elif tasks.UserImage.objects.filter(tag=kwargs["params"]["tag_image"]):
             self.write_message({
-                "message": "This tag already exists. Choose another!",
+                "result": None,
+                "error": "This tag already exists. Choose another!",
                 "method": "error"
             })
 
-        elif not reg.match(kwargs["tag_image"]):
+        elif not reg.match(kwargs["params"]["tag_image"]):
 
             # Rules for creating an image tag:
             # https://docs.docker.com/engine/reference/commandline/tag/
             self.write_message({
-                "message": ("Name components may contain lowercase letters, "
-                            "digits and separators. A separator is defined "
-                            "as a period, one or two underscores, or one or "
-                            "more dashes. A name component may not start "
-                            "or end with a separator.\n"
-                            "A tag name must be valid ASCII and may "
-                            "contain lowercase and uppercase letters, "
-                            "digits, underscores, periods and dashes. "
-                            "A tag name may not start with a period or "
-                            "a dash and may contain a maximum of "
-                            "128 characters."),
+                "result": None,
+                "error": ("Name components may contain lowercase letters, "
+                          "digits and separators. A separator is defined "
+                          "as a period, one or two underscores, or one or "
+                          "more dashes. A name component may not start "
+                          "or end with a separator.\n"
+                          "A tag name must be valid ASCII and may "
+                          "contain lowercase and uppercase letters, "
+                          "digits, underscores, periods and dashes. "
+                          "A tag name may not start with a period or "
+                          "a dash and may contain a maximum of "
+                          "128 characters."),
                 "method": "error"
             })
 
@@ -179,7 +186,8 @@ class DockerWebSocket(SecWebSocket):
 
         for line in lines[self.build_lines_count:]:
             self.write_message({
-                "output": line,
+                "result": line,
+                "error": None,
                 "method": method,
             })
         self.build_lines_count = len(lines)
