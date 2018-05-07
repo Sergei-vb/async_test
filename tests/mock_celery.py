@@ -13,7 +13,7 @@ class Build:
     @staticmethod
     def delay(user_id, **kwargs):
         """Imitates method delay Celery."""
-        tag_image = kwargs["tag_image"].lower()
+        tag_image = kwargs["params"]["tag_image"]
         image_id = "Id:....."
         created = datetime.datetime.now()
         size = 0

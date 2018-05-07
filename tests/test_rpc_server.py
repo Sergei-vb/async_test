@@ -115,7 +115,7 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.path = "/load_from_docker"
         self.request = self.path + "/?user_id={}".format(self.user_id)
 
-        self.url_address = "https://github.com/Sergei-vb/coralline-rpc"
+        self.url = "https://github.com/Sergei-vb/coralline-rpc"
         self.new_tag_image = "{}/new_tag:latest".format(self.user_id)
         self.tag_image = "{}/test_tag:latest".format(self.user_id)
 
@@ -159,23 +159,25 @@ class TestWebSocket(AsyncHTTPTestCase):
     def test_websocket_connection(self):
         """Tests websocket connection. """
 
-        message = {"method": None, "elem": None}
+        message = {"method": None, "params": {"elem": None}}
         response = yield self._get_response(message)
 
-        self.assertEqual('Client error', response["message"])
+        self.assertEqual('Client error', response["error"])
 
     @gen_test
-    def test_url_address(self):
+    def test_build_image(self):
         """Tests creating images. """
 
-        message = {"method": "url_address",
-                   "url_address": self.url_address,
-                   "tag_image": self.new_tag_image}
+        message = {
+            "method": "build_image",
+            "params": {"url": self.url,
+                       "tag_image": self.new_tag_image}
+        }
         response = yield self._get_response(message)
 
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["method"], "url_address")
-        self.assertEqual(response["output"], "Building image...")
+        self.assertEqual(response["method"], "build_image")
+        self.assertEqual(response["result"], "Building image...")
 
         self.assertIn("value_for_user_{0}".format(self.user_id),
                       APP.task_manager.callbacks.keys())
@@ -190,9 +192,11 @@ class TestWebSocket(AsyncHTTPTestCase):
     def test_tag_image_duplicate(self):
         """Tests case when sending existing image tag. """
 
-        message = {"method": "url_address",
-                   "url_address": self.url_address,
-                   "tag_image": self.tag_image}
+        message = {
+            "method": "build_image",
+            "params": {"url": self.url,
+                       "tag_image": self.tag_image}
+        }
         response = yield self._get_response(message)
 
         self.assertIsInstance(response, dict)
@@ -202,14 +206,14 @@ class TestWebSocket(AsyncHTTPTestCase):
     def test_images(self):
         """Tests getting images list. """
 
-        message = {"method": "images", "elem": None}
+        message = {"method": "images", "params": {"elem": None}}
         response = yield self._get_response(message)
 
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "images")
-        self.assertIsInstance(response["images"], list)
+        self.assertIsInstance(response["result"], list)
 
-        images = [i["tag"] for i in response["images"]]
+        images = [i["tag"] for i in response["result"]]
 
         self.assertIn(self.tag_image, images)
 
@@ -222,12 +226,12 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "containers")
-        self.assertIsInstance(response["containers"], list)
-        self.assertNotEqual(len(response["containers"]), 0)
+        self.assertIsInstance(response["result"], list)
+        self.assertNotEqual(len(response["result"]), 0)
 
         container_name = "/" + self.container_to_run
 
-        containers = {i[0]: i[1] for i in response["containers"]}
+        containers = {i[0]: i[1] for i in response["result"]}
         self.assertIn(container_name, containers.keys(),
                       "Container not found")
 
@@ -238,29 +242,29 @@ class TestWebSocket(AsyncHTTPTestCase):
         cont_num = len(CLIENT.containers_list)
 
         message = {"method": "create",
-                   "elem": self.tag_image}
+                   "params": {"elem": self.tag_image}}
         response = yield self._get_response(message)
 
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "create")
-        self.assertIsInstance(response["containers"], list)
-        self.assertEqual(len(response["containers"]), cont_num + 1)
+        self.assertIsInstance(response["result"], list)
+        self.assertEqual(len(response["result"]), cont_num + 1)
 
     @gen_test
     def test_start(self):
         """Tests starting the container. """
 
         message = {"method": "start",
-                   "elem": self.container_to_run}
+                   "params": {"elem": self.container_to_run}}
         response = yield self._get_response(message)
 
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "start")
-        self.assertIsInstance(response["containers"], list)
+        self.assertIsInstance(response["result"], list)
 
         container_name = "/" + self.container_to_run
 
-        containers = {i[0]: i[1] for i in response["containers"]}
+        containers = {i[0]: i[1] for i in response["result"]}
         self.assertIn(container_name, containers.keys(),
                       "Container not found")
 
@@ -273,16 +277,16 @@ class TestWebSocket(AsyncHTTPTestCase):
         """Tests stopping the container. """
 
         message = {"method": "stop",
-                   "elem": self.container_running}
+                   "params": {"elem": self.container_running}}
         response = yield self._get_response(message)
 
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "stop")
-        self.assertIsInstance(response["containers"], list)
+        self.assertIsInstance(response["result"], list)
 
         container_name = "/" + self.container_running
 
-        containers = {i[0]: i[1] for i in response["containers"]}
+        containers = {i[0]: i[1] for i in response["result"]}
         self.assertIn(container_name, containers.keys(),
                       "Container not found")
 
@@ -295,14 +299,14 @@ class TestWebSocket(AsyncHTTPTestCase):
         """Tests removing the container. """
 
         message = {"method": "remove",
-                   "elem": self.container_to_remove}
+                   "params": {"elem": self.container_to_remove}}
         response = yield self._get_response(message)
         self.assertIsInstance(response, dict)
         self.assertEqual(response["method"], "remove")
-        self.assertIsInstance(response["containers"], list)
+        self.assertIsInstance(response["result"], list)
 
         container_name = "/" + self.container_to_remove
 
-        containers = {i[0]: i[1] for i in response["containers"]}
+        containers = {i[0]: i[1] for i in response["result"]}
         self.assertNotIn(container_name, containers.keys(),
                          "Container has found")

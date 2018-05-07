@@ -36,12 +36,12 @@ def _save_to_database(user_id, tag_image):
 def build_image(user_id, **kwargs):
     """Builds docker image with specified parameters. """
 
-    tag_image = kwargs["tag_image"]
+    tag_image = kwargs["params"]["tag_image"]
 
     APP_LOG.info('Started building an image, tag: %s', tag_image)
     APP_LOG.debug("USER_ID: %s", user_id)
 
-    url = "{}.git".format(kwargs["url_address"])
+    url = "{}.git".format(kwargs["params"]["url"])
     lines = []
     error_messages = []
 
