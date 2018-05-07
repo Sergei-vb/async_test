@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-virtualenv -p python3.6 venv
+virtualenv -p python3.5 venv
 source ./venv/bin/activate
 pip install -r requirements.txt
 
@@ -11,8 +11,8 @@ sudo mv ./tornado_celery.conf /etc/supervisor/conf.d/
 
 # patching
 cd ../
-cp ./patches/file.patch ./venv/lib/python3.6/site-packages/tornado
-cd ./venv/lib/python3.6/site-packages/tornado
+cp ./patches/file.patch ./venv/lib/python3.5/site-packages/tornado
+cd ./venv/lib/python3.5/site-packages/tornado
 patch -p0 < file.patch
 
 sudo supervisorctl reread
