@@ -37,7 +37,7 @@ You need to go to the directory with the Dockerfile of the cloned repository, th
 * You need setup:
   * [Supervisor (use package manager)](http://supervisord.org/installing.html#installing-a-distribution-package "Supervisor")
   * [Virtualenv](https://virtualenv.pypa.io/en/stable/installation/ "Virtualenv")
-  * [Python 3.6](https://www.python.org/downloads/ "Python3.6")
+  * [Python 3.5](https://www.python.org/downloads/ "Python3.5")
 
 * and run script:
   * Fill fill.sh of your data.
