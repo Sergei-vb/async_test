@@ -2,11 +2,6 @@
 """Tasks description module. """
 import json
 import datetime
-<<<<<<< HEAD
-=======
-import celery.states
-
->>>>>>> Remove 'update_state' method calls. Cleanup code.
 from django_coralline_images.models import UserImage
 
 from c_messaging.app import APP
@@ -39,7 +34,6 @@ def _save_to_database(user_id, tag_image):
 
 class CTask(celery.Task):
     def __init__(self):
-        self.lines = []
         self.error_messages = []
         super(CTask, self).__init__()
 
@@ -54,37 +48,34 @@ def build_image(self, user_id, **kwargs):
     APP_LOG.debug("USER_ID: %s", user_id)
 
     url = "{}.git".format(kwargs["params"]["url"])
-    lines = []
-    error_messages = []
+    self.error_messages = []
 
     for line in CLIENT.build(path=url, rm=True, tag=tag_image):
         build_line = json.loads(line.decode())
 
         if 'error' in build_line.keys():
-            error_messages.append(build_line['error'])
-            lines.append(build_line['error'])
+            self.error_messages.append(build_line['error'])
             APP_LOG.fatal(build_line['error'])
 
-            meta = {'line': self.lines,
+            meta = {'line': build_line['error'],
                     'method': kwargs['method']}
 
             self.send_event('task-failed', retry=False, info=meta)
 
         else:
             line_str = list(build_line.values())[0]
-            lines.append(line_str)
             APP_LOG.debug(line_str)
 
-            meta = {'line': self.lines,
+            meta = {'line': line_str,
                     'method': kwargs['method']}
 
             self.send_event('task-progress', retry=False, info=meta)
 
-    if not error_messages:
+    if not self.error_messages:
         _save_to_database(user_id, tag_image)
 
         APP_LOG.info('Image %s has built successfully.', tag_image)
     else:
         APP_LOG.fatal('Error building image %s! Error message: "%s"',
                       tag_image,
-                      error_messages)
+                      self.error_messages)

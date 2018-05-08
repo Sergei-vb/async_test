@@ -33,7 +33,6 @@ class DockerWebSocket(SecWebSocket):
 
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
-        self.build_lines_count = 0
         self.start_monitor()
 
     @run_on_executor
@@ -198,17 +197,15 @@ class DockerWebSocket(SecWebSocket):
 
         return False
 
-    def callback(self, lines, method):
+    def callback(self, line, method):
         """Translate the output results of building docker images
         to the client. """
 
-        for line in lines[self.build_lines_count:]:
-            self.write_message({
-                "result": line,
-                "error": None,
-                "method": method,
-            })
-        self.build_lines_count = len(lines)
+        self.write_message({
+            "result": line,
+            "error": None,
+            "method": method,
+        })
 
 
 if os.getenv("TEST"):
