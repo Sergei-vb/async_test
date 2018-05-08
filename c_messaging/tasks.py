@@ -2,6 +2,7 @@
 """Tasks description module. """
 import json
 import datetime
+
 from django_coralline_images.models import UserImage
 
 from c_messaging.app import APP
@@ -32,13 +33,7 @@ def _save_to_database(user_id, tag_image):
     user_image.save()
 
 
-class CTask(celery.Task):
-    def __init__(self):
-        self.error_messages = []
-        super(CTask, self).__init__()
-
-
-@APP.task(base=CTask, bind=True)
+@APP.task(bind=True)
 def build_image(self, user_id, **kwargs):
     """Builds docker image with specified parameters. """
 
