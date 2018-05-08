@@ -11,8 +11,7 @@ import tornado.web
 import tornado.websocket
 import tornado.gen
 
-from tornado.concurrent import run_on_executor
-from concurrent.futures import ThreadPoolExecutor
+from tornado.concurrent import run_on_executor, futures
 
 from c_messaging import tasks
 from c_messaging.app import APP as celery_app
@@ -29,7 +28,7 @@ def make_app():
 
 class DockerWebSocket(SecWebSocket):
     """WebSocket handler, implementing Docker RPC. """
-    executor = ThreadPoolExecutor(max_workers=4)
+    executor = futures.ThreadPoolExecutor(max_workers=4)
 
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
