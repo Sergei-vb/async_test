@@ -9,8 +9,13 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
+import tornado.gen
+
+from tornado.concurrent import run_on_executor
+from concurrent.futures import ThreadPoolExecutor
 
 from c_messaging import tasks
+from c_messaging.app import APP as celery_app
 from c_rpc_base.websocket import SecWebSocket
 from c_rpc_base import CLIENT
 
@@ -39,10 +44,40 @@ def make_app():
 
 class DockerWebSocket(SecWebSocket):
     """WebSocket handler, implementing Docker RPC. """
+    executor = ThreadPoolExecutor(max_workers=4)
 
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self.build_lines_count = 0
+        self.start_monitor()
+
+    @run_on_executor
+    def my_monitor(self, app):
+
+        def show_progress(event):
+            if event.get('info', None):
+                line = event['info'].get('line', None)
+                method = event['info'].get('method', None)
+                self.callback(line, method)
+
+        def show_failed(event):
+            if event.get('info', None):
+                line = event['info'].get('line', None)
+                method = event['info'].get('method', None)
+                self.callback(line, method)
+
+        with app.connection() as connection:
+            print('connected to celery')
+
+            recv = app.events.Receiver(connection, handlers={
+                'task-progress': show_progress,
+                'task-failed': show_failed,
+            })
+            recv.capture(limit=None, timeout=None, wakeup=True)
+
+    @tornado.gen.coroutine
+    def start_monitor(self):
+        yield self.my_monitor(celery_app)
 
     def _get_user_images(self):
         db_images = tasks.UserImage.objects.filter(
