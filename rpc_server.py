@@ -28,10 +28,9 @@ def make_app():
 
 class DockerWebSocket(SecWebSocket):
     """WebSocket handler, implementing Docker RPC. """
-    executor = futures.ThreadPoolExecutor(max_workers=4)
-
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
+        self.executor = futures.ThreadPoolExecutor(max_workers=4)
         self.start_monitor()
 
     @run_on_executor
