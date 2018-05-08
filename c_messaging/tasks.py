@@ -2,6 +2,11 @@
 """Tasks description module. """
 import json
 import datetime
+<<<<<<< HEAD
+=======
+import celery.states
+
+>>>>>>> Remove 'update_state' method calls. Cleanup code.
 from django_coralline_images.models import UserImage
 
 from c_messaging.app import APP
@@ -32,8 +37,15 @@ def _save_to_database(user_id, tag_image):
     user_image.save()
 
 
-@APP.task
-def build_image(user_id, **kwargs):
+class CTask(celery.Task):
+    def __init__(self):
+        self.lines = []
+        self.error_messages = []
+        super(CTask, self).__init__()
+
+
+@APP.task(base=CTask, bind=True)
+def build_image(self, user_id, **kwargs):
     """Builds docker image with specified parameters. """
 
     tag_image = kwargs["params"]["tag_image"]
@@ -52,14 +64,21 @@ def build_image(user_id, **kwargs):
             error_messages.append(build_line['error'])
             lines.append(build_line['error'])
             APP_LOG.fatal(build_line['error'])
+
+            meta = {'line': self.lines,
+                    'method': kwargs['method']}
+
+            self.send_event('task-failed', retry=False, info=meta)
+
         else:
             line_str = list(build_line.values())[0]
             lines.append(line_str)
             APP_LOG.debug(line_str)
 
-        build_image.update_state(state='PROGRESS',
-                                 meta={'line': lines,
-                                       'method': kwargs['method']})
+            meta = {'line': self.lines,
+                    'method': kwargs['method']}
+
+            self.send_event('task-progress', retry=False, info=meta)
 
     if not error_messages:
         _save_to_database(user_id, tag_image)
