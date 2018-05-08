@@ -60,7 +60,8 @@ def build_image(self, user_id, **kwargs):
             meta = {'line': build_line['error'],
                     'method': kwargs['method']}
 
-            self.send_event('task-failed', retry=False, info=meta)
+            self.send_event('task-failed-{}'.format(user_id),
+                            retry=False, info=meta)
 
         else:
             line_str = list(build_line.values())[0]
@@ -69,7 +70,8 @@ def build_image(self, user_id, **kwargs):
             meta = {'line': line_str,
                     'method': kwargs['method']}
 
-            self.send_event('task-progress', retry=False, info=meta)
+            self.send_event('task-progress-{}'.format(user_id),
+                            retry=False, info=meta)
 
     if not self.error_messages:
         _save_to_database(user_id, tag_image)

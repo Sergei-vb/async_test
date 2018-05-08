@@ -30,6 +30,7 @@ class DockerWebSocket(SecWebSocket):
     """WebSocket handler, implementing Docker RPC. """
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
+        self.receiver = None
         self.executor = futures.ThreadPoolExecutor(max_workers=4)
         self.start_monitor()
 
@@ -51,11 +52,11 @@ class DockerWebSocket(SecWebSocket):
         with app.connection() as connection:
             print('connected to celery')
 
-            receiver = app.events.Receiver(connection, handlers={
-                'task-progress': show_progress,
-                'task-failed': show_failed,
+            self.receiver = app.events.Receiver(connection, handlers={
+                'task-progress-{}'.format(self.user_id): show_progress,
+                'task-failed-{}'.format(self.user_id): show_failed,
             })
-            receiver.capture(limit=None, timeout=None, wakeup=True)
+            self.receiver.capture(limit=None, timeout=None, wakeup=True)
 
     @tornado.gen.coroutine
     def start_monitor(self):
