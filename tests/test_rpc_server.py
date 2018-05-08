@@ -179,9 +179,6 @@ class TestWebSocket(AsyncHTTPTestCase):
         self.assertEqual(response["method"], "build_image")
         self.assertEqual(response["result"], "Building image...")
 
-        self.assertIn("value_for_user_{0}".format(self.user_id),
-                      APP.task_manager.callbacks.keys())
-
         user_images = [i["tag"] for i in UserImage.objects.all()]
         self.assertIn(self.new_tag_image, user_images)
 
