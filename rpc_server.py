@@ -20,21 +20,6 @@ from c_rpc_base.websocket import SecWebSocket
 from c_rpc_base import CLIENT
 
 
-class TasksManager:
-    """Tasks managing. """
-    callbacks = dict()
-
-    def register(self, task, callback):
-        """Adds new pair 'task-callback' to the callbacks poll. """
-        self.callbacks[task] = callback
-
-    def notify_callbacks(self):
-        """Rises callbacks in poll. """
-        for task, callback in self.callbacks.items():
-            if task.state == 'PROGRESS':
-                callback(task.info['line'], task.info['method'])
-
-
 def make_app():
     """Routing."""
     return tornado.web.Application([
@@ -52,7 +37,7 @@ class DockerWebSocket(SecWebSocket):
         self.start_monitor()
 
     @run_on_executor
-    def my_monitor(self, app):
+    def monitor(self, app):
 
         def show_progress(event):
             if event.get('info', None):
@@ -69,15 +54,15 @@ class DockerWebSocket(SecWebSocket):
         with app.connection() as connection:
             print('connected to celery')
 
-            recv = app.events.Receiver(connection, handlers={
+            receiver = app.events.Receiver(connection, handlers={
                 'task-progress': show_progress,
                 'task-failed': show_failed,
             })
-            recv.capture(limit=None, timeout=None, wakeup=True)
+            receiver.capture(limit=None, timeout=None, wakeup=True)
 
     @tornado.gen.coroutine
     def start_monitor(self):
-        yield self.my_monitor(celery_app)
+        yield self.monitor(celery_app)
 
     def _get_user_images(self):
         db_images = tasks.UserImage.objects.filter(
@@ -90,9 +75,7 @@ class DockerWebSocket(SecWebSocket):
                 for i in db_images]
 
     def _build_image(self, **kwargs):
-        APP.task_manager.register(
-            tasks.build_image.delay(self.user_id, **kwargs),
-            self.callback)
+        tasks.build_image.delay(self.user_id, **kwargs)
 
         self.write_message({
             "result": "Building image...",
@@ -234,17 +217,10 @@ if os.getenv("TEST"):
 
     CLIENT = MockClientDockerAPI()
     APP = make_app()
-    APP.task_manager = TasksManager()
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
     APP = make_app()
-
-    APP.task_manager = TasksManager()
-
-    PERIODIC_CALLBACK = tornado.ioloop.PeriodicCallback(
-        APP.task_manager.notify_callbacks, 1000)
-    PERIODIC_CALLBACK.start()
 
     if os.getenv("PORT"):
         logging.info("Use your PORT: %s", os.getenv("PORT"))
