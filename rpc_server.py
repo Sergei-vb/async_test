@@ -42,13 +42,13 @@ class DockerWebSocket(SecWebSocket):
             if event.get('info', None):
                 line = event['info'].get('line', None)
                 method = event['info'].get('method', None)
-                self.callback(line, method)
+                self.build_output(line, method)
 
         def show_failed(event):
             if event.get('info', None):
                 line = event['info'].get('line', None)
                 method = event['info'].get('method', None)
-                self.callback(line, method)
+                self.build_output(line, method)
 
         with app.connection() as connection:
             print('connected to celery')
@@ -197,7 +197,7 @@ class DockerWebSocket(SecWebSocket):
 
         return False
 
-    def callback(self, line, method):
+    def build_output(self, line, method):
         """Translate the output results of building docker images
         to the client. """
 
