@@ -36,14 +36,22 @@ class DockerWebSocket(SecWebSocket):
 
     @run_on_executor
     def monitor(self, app):
+        """Runs events monitor of celery tasks.
+        Listens to events determined by 'user_id'.
+        As it uses 'capture' method of celery Receiver object,
+        which is considered to be run in the main process,
+        and never stop unless it is stopped manually,
+        ThreadPoolExecutor is used to run it non-blocking the main ioloop. """
 
         def show_progress(event):
+            """Sends the info line of building image progress. """
             if event.get('info', None):
                 line = event['info'].get('line', None)
                 method = event['info'].get('method', None)
                 self.build_output(line, method)
 
         def show_failed(event):
+            """Sends the info line when building image fails. """
             if event.get('info', None):
                 line = event['info'].get('line', None)
                 method = event['info'].get('method', None)
