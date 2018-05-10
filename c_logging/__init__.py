@@ -15,3 +15,4 @@ _FILE_HANDLER.setFormatter(logging.Formatter(_FORMAT_STR))
 
 APP_LOG = logging.getLogger(_LOGNAME)
 APP_LOG.addHandler(_FILE_HANDLER)
+APP_LOG.propagate = False
