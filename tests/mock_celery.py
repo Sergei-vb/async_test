@@ -4,6 +4,7 @@ import datetime
 
 from tests.mock_django_orm import UserImage
 from tests.mock_docker import MockClientDockerAPI
+from tests.celery_app import Receiver
 
 
 # pylint: disable=too-few-public-methods
@@ -40,7 +41,17 @@ class Build:
              'VirtualSize': 191623983}
         )
 
-        return "value_for_user_{0}".format(user_id)
+        build = ["Step 1 : VOLUME /data",
+                 "Step 2 : CMD ['/bin/sh']",
+                 "Successfully built 2855fc"]
+
+        receiver = Receiver()
+        for line_str in build:
+            meta = {'line': line_str,
+                    'method': kwargs['method']}
+
+            receiver.data_from_celery('task-progress-{}'.format(user_id),
+                                      info=meta)
 
 
 # pylint: disable=invalid-name

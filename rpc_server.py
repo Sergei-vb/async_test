@@ -32,7 +32,10 @@ class DockerWebSocket(SecWebSocket):
         super().__init__(application, request, **kwargs)
         self.receiver = None
         self.executor = futures.ThreadPoolExecutor(max_workers=4)
+
+    def open(self, *args, **kwargs):
         self.start_monitor()
+        super().open(*args, **kwargs)
 
     @run_on_executor
     def monitor(self, app):
@@ -81,13 +84,14 @@ class DockerWebSocket(SecWebSocket):
                 for i in db_images]
 
     def _build_image(self, **kwargs):
-        tasks.build_image.delay(self.user_id, **kwargs)
 
         self.write_message({
             "result": "Building image...",
             "error": None,
             "method": kwargs["method"]
         })
+
+        tasks.build_image.delay(self.user_id, **kwargs)
 
     def _images(self, **kwargs):
         user_images = self._get_user_images()
@@ -218,6 +222,7 @@ class DockerWebSocket(SecWebSocket):
 if os.getenv("TEST"):
     import tests.mock_celery as tasks
     from tests.mock_docker import MockClientDockerAPI
+    from tests.celery_app import APP as celery_app
 
     CLIENT = MockClientDockerAPI()
     APP = make_app()
