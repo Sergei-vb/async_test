@@ -9,6 +9,7 @@ from tornado.escape import json_decode, json_encode
 from rpc_server import CLIENT, APP
 
 from tests.mock_django_orm import UserImage
+from tests.celery_app import Receiver
 
 
 class TestWebSocket(AsyncHTTPTestCase):
@@ -184,6 +185,14 @@ class TestWebSocket(AsyncHTTPTestCase):
 
         docker_images = [i["RepoTags"][0] for i in CLIENT.images_list]
         self.assertIn(self.new_tag_image, docker_images)
+
+        dict1 = {"method": "build_image", "line": "Step 1 : VOLUME /data"}
+        dict2 = {"method": "build_image", "line": "Step 2 : CMD ['/bin/sh']"}
+        dict3 = {"method": "build_image", "line": "Successfully built 2855fc"}
+        data_for_check = [{"show_progress": {"info": dict1}},
+                          {"show_progress": {"info": dict2}},
+                          {"show_progress": {"info": dict3}}]
+        self.assertListEqual(data_for_check, Receiver.check)
 
     @gen_test
     def test_tag_image_duplicate(self):

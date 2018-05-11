@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+"""Mock App Celery. """
 
 
+# pylint: disable=too-few-public-methods
 class Receiver:
+    """Processes and stores data for tests. """
     data = []
     check = []
 
@@ -11,10 +14,11 @@ class Receiver:
             self.data.append(handlers)
 
     def data_from_celery(self, receive_data, info=None):
-        print("----self.data:", self.data)
+        """
+        Gets data from mock_celery then compares it with data from
+        rpc_server and forms array for tests.
+        """
         for row in self.data[0].keys():
-            print("----row:", row)
-            print("----receive_data:", receive_data)
             if row == receive_data:
                 dict_for_check = {self.data[0][row]: {"info": info}}
                 self.check.append(dict_for_check)
@@ -25,12 +29,15 @@ class Receiver:
 
 
 class EventsMock:
+    """Needs only for correct work. """
+    # pylint: disable=invalid-name
     @staticmethod
     def Receiver(connection, handlers):
         return Receiver(connection, handlers)
 
 
 class Broker:
+    """Needs only for correct work. """
     def __enter__(self):
         pass
 
@@ -39,12 +46,13 @@ class Broker:
 
 
 class CeleryMock:
+    """Needs only for correct work. """
     @staticmethod
     def connection():
-        """Connects to broker. """
+        """Mock connects to broker. """
         return Broker()
 
     events = EventsMock()
 
 
-celery_app = CeleryMock()
+APP = CeleryMock()
